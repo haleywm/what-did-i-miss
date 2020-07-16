@@ -24,4 +24,4 @@ This is a bot that generates wordclouds based on messages that have been posted 
 I'm planning on adding several features depending on the opinions and suggestions of my friends, including potential features such as:
 
 - Allowing users to react with a pin icon on messages to vote that the message be pinned.
-- ¯\\_(ツ)_/¯
+- ¯\\\_(ツ)\_/¯
