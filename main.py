@@ -1,6 +1,10 @@
 import PIL, wordcloud, sys, discord, datetime
 from discord.ext.commands import Bot
 
+class UserError(Exception):
+    def __init__(self, message="Invalid Input"):
+        self.message = message
+
 PREFIX = "."
 try:
     with open("key.txt") as key_file:
@@ -30,23 +34,21 @@ async def whatdidimiss(ctx, in_time = "6h", in_one_channel = "True"):
             words = await collect_messages(ctx, one_channel, timestamp)
             create_wordcloud(words, "wordcloud.png")
             await ctx.send(file=discord.File(open("wordcloud.png", "rb")))
-    except ValueError as e:
-        await ctx.send(f"Error: {e.message}")
+    except UserError as e:
+        await ctx.send(f"Invalid Input: {e.message}")
 
 def parse_time_to_minutes(raw_time):
     units = ("m", "h", "d")
     try:
         minutes = int(raw_time[:-1])
     except ValueError:
-        raise ValueError("Invalid time duration.")
+        raise UserError("Invalid time duration.")
     unit = raw_time[-1].lower()
     if not unit in units:
-        raise ValueError("Invalid time unit")
-    if unit == "m":
-        pass
-    elif unit == "d":
+        raise UserError("Invalid time unit")
+    if unit == "d":
         minutes *= 1440
-    else:
+    elif unit == "h":
         minutes *= 60
     return minutes
 
