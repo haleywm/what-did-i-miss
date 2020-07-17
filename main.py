@@ -47,6 +47,8 @@ def parse_time_to_minutes(raw_time):
         minutes = int(raw_time[:-1])
     except ValueError:
         raise UserError("Invalid time duration.")
+    if minutes > 100000 or minutes < 0:
+        raise UserError("Number outside of allowed range")
     unit = raw_time[-1].lower()
     if not unit in units:
         raise UserError("Invalid time unit")
