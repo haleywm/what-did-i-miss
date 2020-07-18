@@ -1,0 +1,22 @@
+### This is the default config file.
+### DO NOT MODIFY THIS
+### create a config.yml file in this directory
+### overwriting settings as needed (key must be set)
+### This file is subject to change as features are added
+
+# ~ indicated a null value, replacing it is recommended
+
+# List the private API key here
+key: ~
+admins:
+  # List any ID's belonging to any admins here, on lines prefixed with "  - "
+  - ~
+commands:
+  # Command options:
+  whatdidimiss:
+    enabled: True
+    # Valid units: m, d, h. Setting this value too high or negative can cause overflow errors
+    maxtime: 7d
+    defaulttime: 6h
+  stop:
+    enabled: True

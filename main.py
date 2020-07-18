@@ -1,30 +1,56 @@
-import PIL, wordcloud, sys, discord, datetime, asyncio
+import wordcloud, sys, discord, datetime, asyncio
 import concurrent.futures
 from discord.ext.commands import Bot
+from yaml import load, YAMLError, CLoader as Loader
 
 class UserError(Exception):
     def __init__(self, message="Invalid Input"):
         self.message = message
 
 PREFIX = "."
+
+# Loading config data, catching errors in a user friendly way
 try:
-    with open("key.txt") as key_file:
-        KEY = key_file.readline()
+    try:
+        CONFIG = load(open("default_config.yml"), Loader=Loader)
+    except FileNotFoundError:
+        print("The default_config.yml file has been moved or deleted.")
+        sys.exit(-1)
+    CONFIG.update(load(open("config.yml"), Loader=Loader))
 except FileNotFoundError:
-    print("Please create a key.txt file containing the discord bot private key.")
+    ## TEMP SETTING MIGRATE CODE, remove in future:
+    # If a key.txt file exists, attempt to migrate it into a config file
+    try:
+        with open("key.txt") as file:
+            with open("config.yml", "w") as output:
+                output.write("key: " + file.readline())
+                print("Migrated key to config.yml")
+        try:
+            CONFIG.update(load(open("config.yml"), Loader=Loader))
+        except YAMLError:
+            print("Attempted to generate config.yml from key.txt, encountered invalid output")
+            sys.exit(-1)
+    except FileNotFoundError:
+        print("Please create a config.yml file containing the discord bot private key.")
+        sys.exit(-1)
+except YAMLError:
+    print("Please create a valid config.yml as per the example file, or the README")
     sys.exit(-1)
 
-wordcloud.STOPWORDS.add(("whatdidimiss", "wordcloud"))
+# Adding a few words to the wordcloud stopwords (boring words)
+wordcloud.STOPWORDS.add("whatdidimiss")
+wordcloud.STOPWORDS.add("wordcloud")
 
 bot = Bot(command_prefix=PREFIX)
 
 @bot.command(
     name = "whatdidimiss",
-    aliases = ["wordcloud", "wc"],
+    aliases = ("wordcloud", "wc"),
     description = "Generates a word cloud of messages in the given time period.",
-    usage = "Time: {num}{d, m, or y} (Default: 6h), This Channel Only: {True/False} (Default: True)"
+    usage = "Time: {num}{d, m, or y} (Default: 6h), This Channel Only: {True/False} (Default: True)",
+    enabled = CONFIG["commands"]["whatdidimiss"]["enabled"]
 )
-async def whatdidimiss(ctx, in_time = "6h", in_one_channel = "True"):
+async def whatdidimiss(ctx, in_time = CONFIG["commands"]["whatdidimiss"]["defaulttime"], in_one_channel = "True"):
     try:
         # Checking for appropriate permissions
         # Only check if the bot type is a member of a server
@@ -36,6 +62,8 @@ async def whatdidimiss(ctx, in_time = "6h", in_one_channel = "True"):
             raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.")
         
         minutes = parse_time_to_minutes(in_time)
+        if  minutes > parse_time_to_minutes(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or minutes < 1:
+            raise UserError("Time outside of allowed range")
         one_channel = parse_bool(in_one_channel)
         # Getting the earliest time that should be used
         timestamp = datetime.datetime.utcnow() - datetime.timedelta(minutes=minutes)
@@ -50,6 +78,18 @@ async def whatdidimiss(ctx, in_time = "6h", in_one_channel = "True"):
     except UserError as e:
         await ctx.send(f"Invalid Input: {e.message}")
 
+@bot.command(
+    name = "stop",
+    description = "Shuts down the bot",
+    hidden = True,
+    enabled = CONFIG["commands"]["stop"]["enabled"]
+)
+async def stop_program(ctx):
+    if ctx.message.author.id in CONFIG["admins"]:
+        await bot.logout()
+    else:
+        await ctx.send("You can't tell me what to do")
+
 def parse_time_to_minutes(raw_time):
     units = ("m", "h", "d")
     try:
@@ -63,8 +103,6 @@ def parse_time_to_minutes(raw_time):
         minutes *= 1440
     elif unit == "h":
         minutes *= 60
-    if minutes > 10080 or minutes < 1:
-        raise UserError("Time outside of allowed range")
     return minutes
 
 def parse_bool(in_bool):
@@ -121,4 +159,8 @@ async def on_guild_join(guild):
     if guild.system_channel:
         await guild.system_channel.send("Hi! Use .help to see a list of commands")
 
-bot.run(KEY)
+if CONFIG["key"]:
+    bot.run(CONFIG["key"])
+else:
+    print("Please set a private token")
+    sys.exit(0)
