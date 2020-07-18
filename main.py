@@ -14,7 +14,7 @@ except FileNotFoundError:
     print("Please create a key.txt file containing the discord bot private key.")
     sys.exit(-1)
 
-wordcloud.STOPWORDS.add("whatdidimiss", "wordcloud")
+wordcloud.STOPWORDS.add(("whatdidimiss", "wordcloud"))
 
 bot = Bot(command_prefix=PREFIX)
 
