@@ -8,9 +8,16 @@ The setup of the bot is relatively simple. First, you must setup a discord bot (
 
 Next, clone this repo and extract it and whatever, and create a file called `key.txt` containing only the bots private key.
 
-Next, you must have installed Python 3.8, as well as pip. Install the package dependancies with `python -m pip install --update pip && pip install -r requirements.txt`.
+Next, you must have installed Python 3.8, as well as pip, and gcc. Install the package dependencies with `python -m pip install --update pip && pip install -r requirements.txt`.
 
 Lastly, the application can be run with `python main.py`.
+
+The bot requires the current permissions, in order to run:
+
+| Command         | Server Permissions     | Channel Permissions                              |
+| --------------- | ---------------------- | ------------------------------------------------ |
+| `.whatdidimiss` | `read_message_history` | `read_messages`, `send-messages`, `attach_files` |
+
 
 ## Features
 

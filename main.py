@@ -14,18 +14,27 @@ except FileNotFoundError:
     print("Please create a key.txt file containing the discord bot private key.")
     sys.exit(-1)
 
-wordcloud.STOPWORDS.add("wordcloud")
+wordcloud.STOPWORDS.add("whatdidimiss", "wordcloud")
 
 bot = Bot(command_prefix=PREFIX)
 
 @bot.command(
     name = "whatdidimiss",
+    aliases = ["wordcloud", "wc"],
     description = "Generates a word cloud of messages in the given time period.",
     usage = "Time: {num}{d, m, or y} (Default: 6h), This Channel Only: {True/False} (Default: True)"
 )
-
 async def whatdidimiss(ctx, in_time = "6h", in_one_channel = "True"):
     try:
+        # Checking for appropriate permissions
+        # Only check if the bot type is a member of a server
+        if not check_perms(ctx, discord.Permissions(
+            read_message_history = True,
+            attach_files = True,
+            send_messages = True
+        )):
+            raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.")
+        
         minutes = parse_time_to_minutes(in_time)
         one_channel = parse_bool(in_one_channel)
         # Getting the earliest time that should be used
@@ -47,8 +56,6 @@ def parse_time_to_minutes(raw_time):
         minutes = int(raw_time[:-1])
     except ValueError:
         raise UserError("Invalid time duration.")
-    if minutes > 100000 or minutes < 0:
-        raise UserError("Number outside of allowed range")
     unit = raw_time[-1].lower()
     if not unit in units:
         raise UserError("Invalid time unit")
@@ -56,6 +63,8 @@ def parse_time_to_minutes(raw_time):
         minutes *= 1440
     elif unit == "h":
         minutes *= 60
+    if minutes > 10080 or minutes < 1:
+        raise UserError("Time outside of allowed range")
     return minutes
 
 def parse_bool(in_bool):
@@ -67,32 +76,49 @@ async def collect_messages(ctx, one_channel, timestamp):
     if one_channel or ctx.guild is None: # If the message isn't in a server just grab current channel
         histories = [ctx.history]
     else:
-        histories = [i.history for i in list(filter(lambda i: type(i) is discord.TextChannel, ctx.guild.channels))]
+        histories = [i.history for i in list(filter(
+            lambda i:type(i) is discord.TextChannel and i.permissions_for(ctx.me).read_messages,
+            ctx.guild.channels))]
     words = dict()
     for hist in histories:
         async for msg in hist(limit=None, after=timestamp):
-            add_frequency(words, msg.content)
+            if msg.author is not ctx.me:
+                add_frequency(words, msg.content)
     return words
 
 def create_wordcloud(words, filename):
     wc = wordcloud.WordCloud(
         collocations = False
     )
-    wc.generate_from_frequencies(words).to_file(filename)
+    if words:
+        wc.generate_from_frequencies(words).to_file(filename)
+    else:
+        raise UserError("No words for wordcloud")
 
 def add_frequency(freq_dict, text):
+    MAXLEN = 30
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     for word in text.split():
-        word = word.lower().strip('.,!?\'"')
-        if word not in wordcloud.STOPWORDS:
+        word = word.lower().strip('.,!?\'"`')
+        if word not in wordcloud.STOPWORDS and len(word) <= MAXLEN:
             if word in freq_dict:
                 freq_dict[word] += 1
             else:
                 freq_dict[word] = 1
 
+def check_perms(ctx, perms):
+    # Checks that all permissions are present in context's channel, if the channel is part of a guild (server)
+    return type(ctx.me) is not discord.Member or ctx.channel.permissions_for(ctx.me).is_superset(perms)
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
+    await bot.change_presence(activity=discord.Activity(name=".help", type=discord.ActivityType.listening))
+
+@bot.event
+async def on_guild_join(guild):
+    if guild.system_channel:
+        await guild.system_channel.send("Hi! Use .help to see a list of commands")
 
 bot.run(KEY)
