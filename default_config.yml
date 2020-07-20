@@ -1,6 +1,6 @@
-### This is the default config file.
+### This is the default config.get_config() file.
 ### DO NOT MODIFY THIS
-### create a config.yml file in this directory
+### create a config.get_config().yml file in this directory
 ### overwriting settings as needed (key must be set)
 ### This file is subject to change as features are added
 
