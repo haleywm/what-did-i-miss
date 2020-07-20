@@ -1,7 +1,11 @@
 import wordcloud, sys, discord, datetime, asyncio
 import concurrent.futures
 from discord.ext.commands import Bot
-from yaml import load, YAMLError, CLoader as Loader
+from yaml import load, YAMLError
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
 
 class UserError(Exception):
     def __init__(self, message="Invalid Input"):
