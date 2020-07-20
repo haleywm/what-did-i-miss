@@ -30,10 +30,6 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
             cooldown_id = str(ctx.message.author.id) + ":" + str(ctx.message.channel.id)
             if cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow():
                 raise UserError("Please wait for cooldown.")
-            else:
-                cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
-                    seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
-                )
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
                 raise UserError("Time outside of allowed range")
@@ -48,6 +44,9 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words, "wordcloud.png")
                 await ctx.send(file=discord.File(open("wordcloud.png", "rb")))
+            cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
+                seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
+            )
         except UserError as e:
             await ctx.send(f"Invalid Input: {e.message}")
 
