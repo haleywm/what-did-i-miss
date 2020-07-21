@@ -1,9 +1,11 @@
-import discord
+import discord, re
 from . import config
 
 class UserError(Exception):
     def __init__(self, message="Invalid Input"):
         self.message = message
+
+parseEmojis = re.compile("^<(:.+:)\d+>$")
 
 def parse_time_to_seconds(raw_time):
     units = ("d", "h", "m", "s")
@@ -38,7 +40,8 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords):
     for hist in histories:
         async for msg in hist(limit=None, after=timestamp):
             if msg.author is not ctx.me:
-                add_frequency(words, msg.content, stopwords)
+                # clean_content parses @'s and #'s to be readable names, while content doesn't.
+                add_frequency(words, msg.clean_content, stopwords)
     return words
 
 def add_frequency(freq_dict, text, stopwords):
@@ -47,7 +50,11 @@ def add_frequency(freq_dict, text, stopwords):
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     if not text.startswith("."):
         for word in text.split():
-            word = word.lower().strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
+            match = parseEmojis.match(word)
+            if match:
+                word = match.group(1)
+            else:
+                word = word.lower().strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
             if word not in stopwords and len(word) <= MAXLEN:
                 if word in freq_dict:
                     freq_dict[word] += 1

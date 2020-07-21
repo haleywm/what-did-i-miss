@@ -40,3 +40,10 @@ I'm planning on adding several features depending on the opinions and suggestion
 
 - Recognizing emoticons and adding them to wordclouds
 - Parsing markov chains from user input
+
+## Credits
+
+Included wordcloud font packed using the following open source fonts:
+
+- [Noto Emoji](https://www.google.com/get/noto/)
+- [Source Code Pro](https://github.com/adobe-fonts/source-code-pro)

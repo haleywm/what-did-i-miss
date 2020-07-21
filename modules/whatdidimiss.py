@@ -54,7 +54,8 @@ def create_wordcloud(words, filename):
     wc = wordcloud.WordCloud(
         scale = config.get_config()["commands"]["whatdidimiss"]["scale"],
         width = config.get_config()["commands"]["whatdidimiss"]["width"],
-        height = config.get_config()["commands"]["whatdidimiss"]["height"]
+        height = config.get_config()["commands"]["whatdidimiss"]["height"],
+        font_path = config.get_config()["commands"]["whatdidimiss"]["fontpath"]
     )
     if words:
         wc.generate_from_frequencies(words).to_file(filename)
