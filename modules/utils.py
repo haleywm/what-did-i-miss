@@ -50,11 +50,7 @@ def add_frequency(freq_dict, text, stopwords):
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     if not text.startswith("."):
         for word in text.split():
-            match = parseEmojis.match(word)
-            if match:
-                word = match.group(1)
-            else:
-                word = word.lower().strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
+            word = word.lower().strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
             if word not in stopwords and len(word) <= MAXLEN:
                 if word in freq_dict:
                     freq_dict[word] += 1

@@ -1,7 +1,7 @@
 import discord.ext.commands as commands
-from . import utils, config
+from . import utils, config, wordcloud
 from .utils import UserError
-import concurrent.futures, asyncio, datetime, wordcloud
+import concurrent.futures, asyncio, datetime
 import discord
 
 class whatdidimiss(commands.Cog, name="Wordclouds"):
@@ -57,6 +57,9 @@ def create_wordcloud(words, filename):
         height = config.get_config()["commands"]["whatdidimiss"]["height"],
         font_path = config.get_config()["commands"]["whatdidimiss"]["fontpath"]
     )
+    wc.tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"]
+    wc.emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"]
+    wc.rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"]
     if words:
         wc.generate_from_frequencies(words).to_file(filename)
     else:
