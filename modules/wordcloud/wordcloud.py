@@ -324,8 +324,9 @@ class WordCloud(object):
                 colormap = "hsv"
             else:
                 colormap = "viridis"
-        self.tint_emoji = True
-        self.emoji_cache_path = "./cache/"
+        self.tint_emoji = True #modified
+        self.emoji_cache_path = "./cache/" #modified
+        self.emoji_regex = re.compile("<:[\w]*:(\d*)>") #modified
         self.colormap = colormap
         self.collocations = collocations
         self.font_path = font_path
@@ -486,9 +487,7 @@ class WordCloud(object):
         for word, freq in frequencies:
             if freq == 0:
                 continue
-            emoji = re.search("<:[\w]*:(\d*)>", word) != None  #modified
-            if(emoji):
-                word = "#"
+            emoji = self.emoji_regex.search(word) != None  #modified
             # select the font size
             rs = self.relative_scaling
             if rs != 0:
@@ -682,9 +681,9 @@ class WordCloud(object):
                         self.background_color)
         draw = ImageDraw.Draw(img)
         for (word, count), font_size, position, orientation, color in self.layout_:
-            m = re.search("<:[\w]*:(\d*)>", word) #modified
+            m = self.emoji_regex.search(word) #modified
             if(m != None):
-                self.add_discord_emoji(m.group(1), img, position, orientation, font_size, color)
+                self.add_discord_emoji(m.group(1), img, position, orientation, font_size, color) #modified
                 continue
             font = ImageFont.truetype(self.font_path,
                                       int(font_size * self.scale))

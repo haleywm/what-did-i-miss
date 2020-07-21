@@ -30,7 +30,7 @@ commands:
     tint: True
     cache: cache/
     #debug
-    debug: True
+    debug: False
     stopwords:
       # Boring words that are filtered from the wordcloud
       # Note that if you define any custom stopwords, you will overwrite this list
