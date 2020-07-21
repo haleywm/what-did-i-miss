@@ -35,7 +35,7 @@ except YAMLError:
     sys.exit(1)
 
 with open("stopwords.txt") as stoplist:
-    CONFIG["commands"]["whatdidimiss"]["stopwords"] = stoplist.readlines()
+    CONFIG["commands"]["whatdidimiss"]["stopwords"] = [line[:-1] for line in stoplist.readlines()]
 
 # This method is how other modules will interact with this and get the config dict
 def get_config():
