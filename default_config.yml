@@ -28,9 +28,10 @@ commands:
     fontpath: fonts/MergedFonts.ttf
     #emoji
     tint: True
+    rotate: True
     cache: cache/
     #debug
-    debug: False
+    debug: false
     stopwords:
       # Boring words that are filtered from the wordcloud
       # Note that if you define any custom stopwords, you will overwrite this list

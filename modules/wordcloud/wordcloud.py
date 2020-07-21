@@ -325,6 +325,7 @@ class WordCloud(object):
             else:
                 colormap = "viridis"
         self.tint_emoji = True #modified
+        self.rotate_emoji = True #modified
         self.emoji_cache_path = "./cache/" #modified
         self.emoji_regex = re.compile("<:[\w]*:(\d*)>") #modified
         self.colormap = colormap
@@ -662,6 +663,8 @@ class WordCloud(object):
             url = "https://cdn.discordapp.com/emojis/{}.png".format(id)
             self.download_emoji(url, name)
         i = Image.open(name)
+        if(self.rotate_emoji and orientation != None):
+            i = i.rotate(90)
         if(self.tint_emoji):
             c = Image.new('RGBA', i.size, color)
             i = ImageChops.add(i, c, 2)

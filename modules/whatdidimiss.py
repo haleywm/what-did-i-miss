@@ -59,6 +59,7 @@ def create_wordcloud(words, filename):
     )
     wc.tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"]
     wc.emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"]
+    wc.rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"]
     if words:
         wc.generate_from_frequencies(words).to_file(filename)
     else:
