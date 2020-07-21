@@ -5,8 +5,6 @@ class UserError(Exception):
     def __init__(self, message="Invalid Input"):
         self.message = message
 
-parseEmojis = re.compile("^<(:.+:)\d+>$")
-
 def parse_time_to_seconds(raw_time):
     units = ("d", "h", "m", "s")
     try:

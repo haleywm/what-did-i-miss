@@ -34,6 +34,9 @@ except YAMLError:
     print("Please create a valid config.yml as per the example file, or the README")
     sys.exit(1)
 
+with open("stopwords.txt") as stoplist:
+    CONFIG["commands"]["whatdidimiss"]["stopwords"] = stoplist.readlines()
+
 # This method is how other modules will interact with this and get the config dict
 def get_config():
     return CONFIG
