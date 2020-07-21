@@ -26,6 +26,11 @@ commands:
     # These characters get stripped from the front and end of words
     strip: .,!?\'"`
     fontpath: fonts/MergedFonts.ttf
+    #emoji
+    tint: True
+    cache: cache/
+    #debug
+    debug: True
     stopwords:
       # Boring words that are filtered from the wordcloud
       # Note that if you define any custom stopwords, you will overwrite this list
