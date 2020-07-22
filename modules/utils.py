@@ -5,6 +5,8 @@ class UserError(Exception):
     def __init__(self, message="Invalid Input"):
         self.message = message
 
+parseEmojis = re.compile("^<:.+:\d+>$")
+
 def parse_time_to_seconds(raw_time):
     units = ("d", "h", "m", "s")
     try:
@@ -43,13 +45,13 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords):
     return words
 
 def add_frequency(freq_dict, text, stopwords):
-    MAXLEN = 100
+    MAXLEN = 20
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     if not text.startswith("."):
         for word in text.split():
             word = word.lower().strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
-            if word not in stopwords and len(word) <= MAXLEN:
+            if word not in stopwords and (len(word) <= MAXLEN or parseEmojis.match(word)):
                 if word in freq_dict:
                     freq_dict[word] += 1
                 else:
