@@ -23,6 +23,7 @@ commands:
     scale: 2
     width: 600
     height: 300
+    limit: 0.5
     # These characters get stripped from the front and end of words
     strip: .,!?\'"`
     fontpath: fonts/MergedFonts.ttf
@@ -30,7 +31,5 @@ commands:
     tint: True
     rotate: True
     cache: cache/
-    #debug
-    debug: false
   stop:
     enabled: True

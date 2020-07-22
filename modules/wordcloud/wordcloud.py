@@ -10,6 +10,7 @@ from __future__ import division
 
 import warnings
 from random import Random
+import random #modified
 import io
 import os
 import re
@@ -52,7 +53,16 @@ class IntegralOccupancyMap(object):
     def sample_position(self, size_x, size_y, random_state):
         return query_integral_image(self.integral, size_x, size_y,
                                     random_state)
-
+    def query_position(self, x, y): #modified
+        #Intergral Occupancy Maps work funny
+        #this will return whether (x,y) is occupied
+        x = max(min(x, self.width-2), 0)
+        y = max(min(y, self.height-2), 0)
+        a = self.integral[y, x]
+        b = self.integral[y, x+1]
+        c = self.integral[y+1, x]
+        d = self.integral[y+1, x+1]
+        return d-b-c+a
     def update(self, img_array, pos_x, pos_y):
         partial_integral = np.cumsum(np.cumsum(img_array[pos_x:, pos_y:],
                                                axis=1), axis=0)
@@ -307,11 +317,11 @@ class WordCloud(object):
     scaling heuristic.
     """
 
-    def __init__(self, font_path=None, width=400, height=200, margin=2,
+    def __init__(self, font_path=None, width=400, height=200, margin=6,
                  ranks_only=None, prefer_horizontal=.9, mask=None, scale=1,
                  color_func=None, max_words=200, min_font_size=4,
                  stopwords=None, random_state=None, background_color='black',
-                 max_font_size=None, font_step=1, mode="RGB",
+                 max_font_size=None, font_step=1, mode="RGBA",
                  relative_scaling='auto', regexp=None, collocations=True,
                  colormap=None, normalize_plurals=True, contour_width=0,
                  contour_color='black', repeat=False,
@@ -328,6 +338,7 @@ class WordCloud(object):
         self.rotate_emoji = True #modified
         self.emoji_cache_path = "./cache/" #modified
         self.emoji_regex = re.compile("<:[\w]*:(\d*)>") #modified
+        self.font_size_mod = 1.0
         self.colormap = colormap
         self.collocations = collocations
         self.font_path = font_path
@@ -348,6 +359,9 @@ class WordCloud(object):
         if isinstance(random_state, int):
             random_state = Random(random_state)
         self.random_state = random_state
+        if(self.random_state == None):
+            self.random_state = Random()
+            
         self.background_color = background_color
         self.max_font_size = max_font_size
         self.mode = mode
@@ -388,7 +402,7 @@ class WordCloud(object):
         """
         return self.generate_from_frequencies(frequencies)
 
-    def generate_from_frequencies(self, frequencies, max_font_size=None):  # noqa: C901
+    def generate_from_frequencies(self, frequencies, debug=False, max_font_size=None):  # noqa: C901
         """Create a word_cloud from words and frequencies.
 
         Parameters
@@ -436,6 +450,9 @@ class WordCloud(object):
         draw = ImageDraw.Draw(img_grey)
         img_array = np.asarray(img_grey)
         font_sizes, positions, orientations, colors = [], [], [], []
+        if(debug):
+            img_debug = Image.new("RGBA", (width, height)) #modified
+            debug_draw = ImageDraw.Draw(img_debug)
 
         last_freq = 1.
 
@@ -451,7 +468,7 @@ class WordCloud(object):
                 font_size = self.height
             else:
                 self.generate_from_frequencies(dict(frequencies[:2]),
-                                               max_font_size=self.height)
+                                               max_font_size=self.height*self.font_size_mod)
                 # find font sizes
                 sizes = [x[1] for x in self.layout_]
                 try:
@@ -488,7 +505,19 @@ class WordCloud(object):
         for word, freq in frequencies:
             if freq == 0:
                 continue
-            emoji = self.emoji_regex.search(word) != None  #modified
+            m = self.emoji_regex.search(word)
+            emoji = m != None  #modified
+            size = (0, 0)
+            mask = 0
+            if(emoji):
+                size = self.get_emoji_size(m.group(1))
+                size = (size[0] / max(*size), size[1] / max(*size))
+                name = self.download_emoji(m.group(1))
+                #extract alpha channel to use as a mask
+                img = Image.open(name)
+                mask = Image.new("RGBA", img.size, (255, 255, 255, 0))
+                img.load()
+                mask.putalpha(img.split()[3]) 
             # select the font size
             rs = self.relative_scaling
             if rs != 0:
@@ -501,21 +530,42 @@ class WordCloud(object):
             tried_other_orientation = False
             while True:
                 # try to find a position
-                font = ImageFont.truetype(self.font_path, font_size)
+                mult = 1.0
+                if(len(word) == 1):
+                    mult = 0.5
+
+                font = ImageFont.truetype(self.font_path, int(font_size*mult))
                 # transpose font optionally
                 transposed_font = ImageFont.TransposedFont(
                     font, orientation=orientation)
                 # get size of resulting text
+                if(emoji):
+                    if(orientation != None and self.rotate_emoji):
+                        size = (size[1], size[0])
 
-                box_size = (font_size, font_size)  #modified
+                #if(emoji):
+                #    font_size = min(font_size, min(height/3, width/3)) #cap the emoji height
+                box_size = (int(font_size*size[0]*mult), int(font_size*size[1]*mult))  #scale size by dimension ratio
+                
                 if (not emoji):
-                    box_size = draw.textsize(word, font=transposed_font)
+                    x, y = draw.textsize(word, font=transposed_font)
+                    o_x, o_y = font.getoffset(word)
+                    if(orientation != None):
+                        o_x, o_y = o_y, o_x
+                    box_size = (x - o_x, y - o_y)
                 # find possible places using integral image:
                 result = occupancy.sample_position(box_size[1] + self.margin,
                                                    box_size[0] + self.margin,
                                                    random_state)
-                if result is not None or font_size < self.min_font_size:
+                if result is not None:
+                    if(debug):
+                        o = self.margin // 2
+                        x, y = np.array(result) + 1
+                        p = ((y-o, x-o), (y + box_size[0] + 2*o, x + box_size[1] + 2*o))
+                        debug_draw.rectangle(p, outline="red")
                     # either we found a place or font-size went too small
+                    break
+                if font_size < self.min_font_size:
                     break
                 # if we didn't find a place, make font smaller
                 # but first try to rotate!
@@ -531,16 +581,19 @@ class WordCloud(object):
                 # we were unable to draw any more
                 break
 
-            x, y = np.array(result) + self.margin // 2
+            x, y = np.array(result) + 1 + self.margin // 2
             # actually draw the text
             if(emoji): #modified
-                draw.rectangle(((y, x), (y+font_size, x+font_size)), fill="white")
+                if(orientation != None and self.rotate_emoji): #rotate mask first because size has already been swapped
+                    mask = mask.rotate(90, expand=True) 
+                mask = mask.resize((int(box_size[0]), int(box_size[1])), Image.NEAREST)
+                img_grey.paste(mask, (y, x), mask)
             else:
                 draw.text((y, x), word, fill="white", font=transposed_font)
             positions.append((x, y))
             orientations.append(orientation)
-            font_sizes.append(font_size)
-            colors.append(self.color_func(word, font_size=font_size,
+            font_sizes.append(int(font_size*mult))
+            colors.append(self.color_func(word, font_size=int(font_size*mult),
                                           position=(x, y),
                                           orientation=orientation,
                                           random_state=random_state,
@@ -557,6 +610,16 @@ class WordCloud(object):
 
         self.layout_ = list(zip(frequencies, font_sizes, positions,
                                 orientations, colors))
+
+        if(debug): #writes the mask to debug.png (slow)
+            #this is what word cloud uses to determine where to place text
+            i = Image.new("RGBA", (occupancy.width, occupancy.height), (0, 0, 0, 255)) #modified
+            for x in range(0, occupancy.width):
+                for y in range(0, occupancy.height):
+                    a = int(max(min(occupancy.query_position(x, y), 255), 0))
+                    if(a != 0):
+                        i.putpixel((x, y), (255, 255, 255, 255))
+            Image.alpha_composite(i, img_debug).save("debug.png")
         return self
 
     def process_text(self, text):
@@ -649,28 +712,44 @@ class WordCloud(object):
         if not hasattr(self, "layout_"):
             raise ValueError("WordCloud has not been calculated, call generate"
                              " first.")
-    def download_emoji(self, url, save):
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        f = open(save, "wb")
-        f.write(urlopen(req).read())
-        f.close()
 
-    def add_discord_emoji(self, id, img, position, orientation, size, color):  #modified
+    def download_emoji(self, id): #modified
         path = self.emoji_cache_path
-        name = "{}{}.png".format(path, id)
         pathlib.Path(path).mkdir(exist_ok=True)
+        name = "{}{}.png".format(path, id)
         if(not os.path.isfile(name)):
             url = "https://cdn.discordapp.com/emojis/{}.png".format(id)
-            self.download_emoji(url, name)
+            req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            f = open(name, "wb")
+            f.write(urlopen(req).read())
+            f.close()
+        return name
+    
+    def get_emoji_size(self, id): #modified
+        name = self.download_emoji(id)
         i = Image.open(name)
-        if(self.rotate_emoji and orientation != None):
-            i = i.rotate(90)
-        if(self.tint_emoji):
-            c = Image.new('RGBA', i.size, color)
-            i = ImageChops.add(i, c, 2)
-        p = (position[1]*self.scale, position[0]*self.scale)
-        img.paste(i.resize((size*self.scale, size*self.scale), Image.NEAREST), p)
+        size = i.size
+        size = (size[0] / max(*size), size[1] / max(*size))
+        return size
+        
+    def add_discord_emoji(self, id, img, position, orientation, size, color):  #modified
+        name = self.download_emoji(id)
+        i = Image.open(name)
+        mod = self.get_emoji_size(id)
+        s = (int(size*self.scale*mod[0]), int(size*self.scale*mod[1]))
 
+        p = (position[1]*self.scale, position[0]*self.scale)
+        i = i.resize(s, Image.NEAREST)
+        if(self.rotate_emoji and orientation != None):
+            i = i.transpose(Image.ROTATE_90)
+        if(self.tint_emoji):
+            color = "RGBA" + color[3:-1] + ", 100)" #color is a string, very cool
+            c = Image.new('RGBA', i.size, color)
+            c = Image.alpha_composite(i, c)
+            c.putalpha(i.split()[3]) #give i's alpha channel to c
+            i = c
+        img.paste(i, p, i)
+        
     def to_image(self): 
         self._check_generated()
         if self.mask is not None:
@@ -695,8 +774,6 @@ class WordCloud(object):
             pos = (int(position[1] * self.scale),
                    int(position[0] * self.scale))
             draw.text(pos, word, fill=color, font=transposed_font)
-
-
         return self._draw_contour(img=img)
 
     def recolor(self, random_state=None, color_func=None, colormap=None):

@@ -14,7 +14,7 @@ try:
         sys.exit(1)
     merge_dicts(CONFIG, load(open("config.yml"), Loader=Loader))
 except FileNotFoundError:
-    if(not CONFIG["commands"]["whatdidimiss"]["debug"]): #debug doesent need key
+    if(not CONFIG["key"] == ""): #dont look for key if blank
         ## TEMP SETTING MIGRATE CODE, remove in future:
         # If a key.txt file exists, attempt to migrate it into a config file
         try:

@@ -43,7 +43,7 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords):
     return words
 
 def add_frequency(freq_dict, text, stopwords):
-    MAXLEN = 30
+    MAXLEN = 100
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     if not text.startswith("."):

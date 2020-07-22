@@ -60,8 +60,9 @@ def create_wordcloud(words, filename):
     wc.tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"]
     wc.emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"]
     wc.rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"]
+    wc.font_size_mod = config.get_config()["commands"]["whatdidimiss"]["limit"]
     if words:
-        wc.generate_from_frequencies(words).to_file(filename)
+        wc.generate_from_frequencies(words, False).to_file(filename)
     else:
         raise UserError("No words for wordcloud")
 
