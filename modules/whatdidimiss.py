@@ -1,7 +1,7 @@
 import discord.ext.commands as commands
-from . import utils, config
+from . import utils, config, wordcloud
 from .utils import UserError
-import concurrent.futures, asyncio, datetime, wordcloud
+import concurrent.futures, asyncio, datetime
 import discord
 
 class whatdidimiss(commands.Cog, name="Wordclouds"):
@@ -30,10 +30,6 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
             cooldown_id = str(ctx.message.author.id) + ":" + str(ctx.message.channel.id)
             if cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow():
                 raise UserError("Please wait for cooldown.")
-            else:
-                cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
-                    seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
-                )
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
                 raise UserError("Time outside of allowed range")
@@ -48,6 +44,9 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words, "wordcloud.png")
                 await ctx.send(file=discord.File(open("wordcloud.png", "rb")))
+            cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
+                seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
+            )
         except UserError as e:
             await ctx.send(f"Invalid Input: {e.message}")
 
@@ -55,10 +54,15 @@ def create_wordcloud(words, filename):
     wc = wordcloud.WordCloud(
         scale = config.get_config()["commands"]["whatdidimiss"]["scale"],
         width = config.get_config()["commands"]["whatdidimiss"]["width"],
-        height = config.get_config()["commands"]["whatdidimiss"]["height"]
+        height = config.get_config()["commands"]["whatdidimiss"]["height"],
+        font_path = config.get_config()["commands"]["whatdidimiss"]["fontpath"]
     )
+    wc.tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"]
+    wc.emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"]
+    wc.rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"]
+    wc.font_size_mod = config.get_config()["commands"]["whatdidimiss"]["limit"]
     if words:
-        wc.generate_from_frequencies(words).to_file(filename)
+        wc.generate_from_frequencies(words, False).to_file(filename)
     else:
         raise UserError("No words for wordcloud")
 

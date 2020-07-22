@@ -1,4 +1,4 @@
-import discord
+import discord, re
 from . import config
 
 class UserError(Exception):
@@ -38,11 +38,12 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords):
     for hist in histories:
         async for msg in hist(limit=None, after=timestamp):
             if msg.author is not ctx.me:
-                add_frequency(words, msg.content, stopwords)
+                # clean_content parses @'s and #'s to be readable names, while content doesn't.
+                add_frequency(words, msg.clean_content, stopwords)
     return words
 
 def add_frequency(freq_dict, text, stopwords):
-    MAXLEN = 30
+    MAXLEN = 100
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     if not text.startswith("."):
