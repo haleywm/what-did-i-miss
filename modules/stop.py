@@ -17,6 +17,7 @@ class stop(commands.Cog, name="Stop"):
     )
     async def stop_program(self, ctx):
         if ctx.message.author.id in config.get_config()["admins"]:
+            await ctx.send("Ok bye!!")
             await ctx.bot.logout()
         else:
             await ctx.send("You can't tell me what to do")
