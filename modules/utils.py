@@ -44,7 +44,7 @@ def parse_bool(in_bool):
     falseValues = ("false", "0", "no")
     return in_bool.lower() not in falseValues
 
-async def collect_messages(ctx, one_channel, timestamp, stopwords):
+async def collect_messages(ctx, one_channel, timestamp, stopwords, case_insensitive):
     """Collects messages from a discord server from within a time period.
     Returns a frequency dictionary with its findings.
     Parameters
@@ -59,6 +59,8 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords):
         The datetime that the bot should look forward from
     stopwords : list[string] or set[string]
         A list of words that should be left out of the word count if matched.
+    case_insensitive : bool
+        If the messages should be case sensitive or not.
     """
     # Getting the channel's that should be grabbed from
     if one_channel or ctx.guild is None: # If the message isn't in a server just grab current channel
@@ -72,10 +74,10 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords):
         async for msg in hist(limit=None, after=timestamp):
             if msg.author is not ctx.me:
                 # clean_content parses @'s and #'s to be readable names, while content doesn't.
-                add_frequency(words, msg.clean_content, stopwords)
+                add_frequency(words, msg.clean_content, stopwords, case_insensitive)
     return words
 
-def add_frequency(freq_dict, text, stopwords):
+def add_frequency(freq_dict, text, stopwords, case_insensitive):
     r"""Adds the frequency of words inside the given string to a dict.
     Strips characters at the start and end as defined by
         config.get_config()["commands"]["whatdidimiss"]["strip"]
@@ -88,13 +90,17 @@ def add_frequency(freq_dict, text, stopwords):
         The string that should be parsed
     stopwords : list[string] or set[string]
         A list of words that should be left out of the word count if matched.
+    case_insensitive : bool
+        If the frequency should be case sensitive or not
     """
     MAXLEN = 20
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
     if not text.startswith("."):
         for word in text.split():
-            word = word.lower().strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
+            if case_insensitive:
+                word = word.lower()
+            word = word.strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
             if word not in stopwords and (len(word) <= MAXLEN or parseEmojis.match(word)):
                 if word in freq_dict:
                     freq_dict[word] += 1
