@@ -16,7 +16,17 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
         name = "whatdidimiss",
         aliases = ("wordcloud", "wc"),
         description = "Generates a word cloud of messages in the given time period.",
-        usage = "Time: {num}{d, h, m, s} (Default: 6h), This Channel Only: {True/False} (Default: True), Case Insensitive: {True/False} (Default: True)",
+        usage = r"""<Time> <This Channel Only> <Case Insensitive>
+    Time: {num}{d, h, m, s} (Default: 6h)
+    This Channel Only: {True/False} (Default: True)
+    Case Insensitive: {True/False} (Default: True)
+
+Examples:
+    .wc
+        (Generates a wordcloud for the last 6 hours, in this channel only, case insensitive)
+    .whatdidimiss 45m False False
+        (Generates a wordcloud for the last 45 minutes, in every channel on the server, case sensitive)
+        """,
         enabled = config.get_config()["commands"]["whatdidimiss"]["enabled"]
     )
     async def whatdidimiss(self, ctx,
