@@ -7,7 +7,10 @@ from modules import whatdidimiss, stop
 
 PREFIX = "."
 
-bot = Bot(command_prefix=PREFIX)
+bot = Bot(
+    command_prefix=PREFIX,
+    case_insensitive=True
+)
 
 @bot.event
 async def on_ready():
