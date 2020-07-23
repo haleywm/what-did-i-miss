@@ -39,4 +39,8 @@ with open("stopwords.txt") as stoplist:
 
 # This method is how other modules will interact with this and get the config dict
 def get_config():
+    r"""Returns the config dictionary.
+    Dictionary is built by parsing default_config.yml
+    And then overwriting with values defined in config.yml
+    """
     return CONFIG

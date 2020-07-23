@@ -5,6 +5,9 @@ import concurrent.futures, asyncio, datetime
 import discord
 
 class whatdidimiss(commands.Cog, name="Wordclouds"):
+    r"""Class for defining a word cloud generator command for Discord.py
+    Does not take input apart from what is defined by the spec for adding cogs.
+    """
     def __init__(self, bot):
         self.bot = bot
         self._last_member = None
@@ -17,6 +20,19 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
         enabled = config.get_config()["commands"]["whatdidimiss"]["enabled"]
     )
     async def whatdidimiss(self, ctx, in_time = config.get_config()["commands"]["whatdidimiss"]["defaulttime"], in_one_channel = "True"):
+        r"""Discord Command for generating word clouds from message history in a server.
+        Parameters
+        ----------
+        ctx : discord.ext.commands.Context
+            Provided by Discord.py, is the context within which the command was given.
+        
+        in_time : string, default=config.get_config()["commands"]["whatdidimiss"]["defaulttime"]
+            The amount of time to be evaluated by the bot. Takes a form such as "6h".
+            Should be in form: \d+[smhd], an integer followed by a unit, either s, m, h, or d.
+            Has a maximum value: config.get_config()["commands"]["whatdidimiss"]["maxtime"]
+            Has a per user, per channel cooldown defined by:
+                config.get_config()["commands"]["whatdidimiss"]["cooldown"]
+        """
         try:
             # Checking for appropriate permissions
             # Only check if the bot type is a member of a server
@@ -51,16 +67,25 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
             await ctx.send(f"Invalid Input: {e.message}")
 
 def create_wordcloud(words, filename):
+    r"""Creates a wordcloud given a frequency dictionary, saves it to filename.
+    Parameters
+    ----------
+    words : dict
+        A dictionary of words to be used in the cloud.
+        Every string should have an integer value representing it's frequency.
+        Passes data, and config, to WordCloud.WordCloud().generate_from_frequencies()
+        for generation.
+    """
     wc = wordcloud.WordCloud(
         scale = config.get_config()["commands"]["whatdidimiss"]["scale"],
         width = config.get_config()["commands"]["whatdidimiss"]["width"],
         height = config.get_config()["commands"]["whatdidimiss"]["height"],
-        font_path = config.get_config()["commands"]["whatdidimiss"]["fontpath"]
+        font_path = config.get_config()["commands"]["whatdidimiss"]["fontpath"],
+        tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"],
+        emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"],
+        rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"],
+        font_size_mod = config.get_config()["commands"]["whatdidimiss"]["limit"]
     )
-    wc.tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"]
-    wc.emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"]
-    wc.rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"]
-    wc.font_size_mod = config.get_config()["commands"]["whatdidimiss"]["limit"]
     if words:
         wc.generate_from_frequencies(words, False).to_file(filename)
     else:

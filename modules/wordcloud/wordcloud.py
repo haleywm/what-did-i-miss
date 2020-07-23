@@ -294,6 +294,20 @@ class WordCloud(object):
         See Manning, C.D., Manning, C.D. and Schütze, H., 1999. Foundations of
         Statistical Natural Language Processing. MIT press, p. 162
         https://nlp.stanford.edu/fsnlp/promo/colloc.pdf#page=22
+    
+    rotate_emoji : bool, default=True
+        If emoji should be randomly rotated or not
+    
+    emoji_cache_path : string, default="./cache/"
+        The cache that should be used for storing downloaded emoji
+    
+    emoji_regex : re.Patten, default=re.compile(r"<:[\w]*:(\d*)>")
+        The regex that is used for matching emoji strings that are passed in.
+        Should output the emoji's id, to be used for identifying the emoji,
+        and downloading from Discords servers.
+    
+    font_size_mod : float, default=1.0
+        The multiplier for the maximum font size that can be used in the generator.
 
     Attributes
     ----------
@@ -325,7 +339,9 @@ class WordCloud(object):
                  relative_scaling='auto', regexp=None, collocations=True,
                  colormap=None, normalize_plurals=True, contour_width=0,
                  contour_color='black', repeat=False,
-                 include_numbers=False, min_word_length=0, collocation_threshold=30):
+                 include_numbers=False, min_word_length=0, collocation_threshold=30,
+                 tint_emoji = True, rotate_emoji = True, emoji_cache_path = "./cache/",
+                 emoji_regex = re.compile(r"<:[\w]*:(\d*)>"), font_size_mod = 1.0): #modified
         if font_path is None:
             font_path = FONT_PATH
         if color_func is None and colormap is None:
@@ -334,11 +350,6 @@ class WordCloud(object):
                 colormap = "hsv"
             else:
                 colormap = "viridis"
-        self.tint_emoji = True #modified
-        self.rotate_emoji = True #modified
-        self.emoji_cache_path = "./cache/" #modified
-        self.emoji_regex = re.compile("<:[\w]*:(\d*)>") #modified
-        self.font_size_mod = 1.0
         self.colormap = colormap
         self.collocations = collocations
         self.font_path = font_path
@@ -385,6 +396,11 @@ class WordCloud(object):
         self.include_numbers = include_numbers
         self.min_word_length = min_word_length
         self.collocation_threshold = collocation_threshold
+        self.tint_emoji = tint_emoji #modified
+        self.rotate_emoji = rotate_emoji #modified
+        self.emoji_cache_path = emoji_cache_path #modified
+        self.emoji_regex = emoji_regex #modified
+        self.font_size_mod = font_size_mod
 
     def fit_words(self, frequencies):
         """Create a word_cloud from words and frequencies.
