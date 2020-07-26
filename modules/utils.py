@@ -44,7 +44,9 @@ def parse_bool(in_bool):
     falseValues = ("false", "0", "no")
     return in_bool.lower() not in falseValues
 
-async def collect_messages(ctx, one_channel, timestamp, stopwords, case_insensitive):
+async def collect_messages(
+    ctx, one_channel, timestamp, stopwords, case_insensitive = True, until_last_user_msg = False
+):
     """Collects messages from a discord server from within a time period.
     Returns a frequency dictionary with its findings.
     Parameters
@@ -59,8 +61,10 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords, case_insensit
         The datetime that the bot should look forward from
     stopwords : list[string] or set[string]
         A list of words that should be left out of the word count if matched.
-    case_insensitive : bool
+    case_insensitive : bool, default=True
         If the messages should be case sensitive or not.
+    until_last_user_msg : bool, default=False
+        If the message collection should end when the next message from the user is found
     """
     # Getting the channel's that should be grabbed from
     if one_channel or ctx.guild is None: # If the message isn't in a server just grab current channel
@@ -71,10 +75,18 @@ async def collect_messages(ctx, one_channel, timestamp, stopwords, case_insensit
             ctx.guild.channels))]
     words = dict()
     for hist in histories:
-        async for msg in hist(limit=None, after=timestamp):
+        async for msg in hist(limit=None, after=timestamp, oldest_first=False):
             if msg.author is not ctx.me:
-                # clean_content parses @'s and #'s to be readable names, while content doesn't.
-                add_frequency(words, msg.clean_content, stopwords, case_insensitive)
+                # If only looking until the users last message, stop looking if they're the author
+                if(
+                    until_last_user_msg and
+                    msg.id != ctx.message.id and
+                    msg.author == ctx.message.author
+                ):
+                    break
+                else:
+                    # clean_content parses @'s and #'s to be readable names, while content doesn't.
+                    add_frequency(words, msg.clean_content, stopwords, case_insensitive)
     return words
 
 def add_frequency(freq_dict, text, stopwords, case_insensitive):

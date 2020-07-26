@@ -309,6 +309,12 @@ class WordCloud(object):
     font_size_mod : float, default=1.0
         The multiplier for the maximum font size that can be used in the generator.
 
+    outline_thickness : int, default=0
+        The text outline thickness
+
+    outline_color : string, default="black"
+        The text outline color
+
     Attributes
     ----------
     ``words_`` : dict of string to float
@@ -341,7 +347,8 @@ class WordCloud(object):
                  contour_color='black', repeat=False,
                  include_numbers=False, min_word_length=0, collocation_threshold=30,
                  tint_emoji = True, rotate_emoji = True, emoji_cache_path = "./cache/",
-                 emoji_regex = re.compile(r"<:[\w]*:(\d*)>"), font_size_mod = 1.0): #modified
+                 emoji_regex = re.compile(r"<:[\w]*:(\d*)>"), font_size_mod = 1.0,
+                 outline_thickness = 0, outline_color = "black"): #modified
         if font_path is None:
             font_path = FONT_PATH
         if color_func is None and colormap is None:
@@ -400,7 +407,10 @@ class WordCloud(object):
         self.rotate_emoji = rotate_emoji #modified
         self.emoji_cache_path = emoji_cache_path #modified
         self.emoji_regex = emoji_regex #modified
-        self.font_size_mod = font_size_mod
+        self.font_size_mod = font_size_mod #modified
+        self.outline_thickness = outline_thickness #modified
+        self.outline_color = outline_color #modified
+        self.outline_mult = 0.03
 
     def fit_words(self, frequencies):
         """Create a word_cloud from words and frequencies.
@@ -605,7 +615,7 @@ class WordCloud(object):
                 mask = mask.resize((int(box_size[0]), int(box_size[1])), Image.NEAREST)
                 img_grey.paste(mask, (y, x), mask)
             else:
-                draw.text((y, x), word, fill="white", font=transposed_font)
+                draw.text((y, x), word, fill="white", font=transposed_font, stroke_width=int(font_size * mult * self.scale * self.outline_mult))
             positions.append((x, y))
             orientations.append(orientation)
             font_sizes.append(int(font_size*mult))
@@ -789,7 +799,7 @@ class WordCloud(object):
                 font, orientation=orientation)
             pos = (int(position[1] * self.scale),
                    int(position[0] * self.scale))
-            draw.text(pos, word, fill=color, font=transposed_font)
+            draw.text(pos, word, fill=color, font=transposed_font, stroke_width=int(font_size * self.scale * self.outline_mult), stroke_fill=self.outline_color)
         return self._draw_contour(img=img)
 
     def recolor(self, random_state=None, color_func=None, colormap=None):

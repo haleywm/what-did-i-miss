@@ -17,6 +17,7 @@ class stop(commands.Cog, name="Stop"):
     )
     async def stop_program(self, ctx):
         if ctx.message.author.id in config.get_config()["admins"]:
+            print("Closing due to admin command...")
             await ctx.send("Ok bye!!")
             await ctx.bot.logout()
         else:

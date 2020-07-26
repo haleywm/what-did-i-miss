@@ -3,6 +3,7 @@ from . import utils, config, wordcloud
 from .utils import UserError
 import concurrent.futures, asyncio, datetime
 import discord
+from io import BytesIO
 
 class whatdidimiss(commands.Cog, name="Wordclouds"):
     r"""Class for defining a word cloud generator command for Discord.py
@@ -13,8 +14,8 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
         self._last_member = None
     
     @commands.command(
-        name = "whatdidimiss",
-        aliases = ("wordcloud", "wc"),
+        name = "wordcloud",
+        aliases = ["wc"],
         description = "Generates a word cloud of messages in the given time period.",
         usage = r"""<Time> <This Channel Only> <Case Insensitive>
     Time: {num}{d, h, m, s} (Default: 6h)
@@ -24,12 +25,12 @@ class whatdidimiss(commands.Cog, name="Wordclouds"):
 Examples:
     .wc
         (Generates a wordcloud for the last 6 hours, in this channel only, case insensitive)
-    .whatdidimiss 45m False False
+    .wordcloud 45m False False
         (Generates a wordcloud for the last 45 minutes, in every channel on the server, case sensitive)
         """,
         enabled = config.get_config()["commands"]["whatdidimiss"]["enabled"]
     )
-    async def whatdidimiss(self, ctx,
+    async def wordcloud(self, ctx,
         in_time = config.get_config()["commands"]["whatdidimiss"]["defaulttime"],
         one_channel = "True",
         case_insensitive = "True"
@@ -64,15 +65,37 @@ Examples:
                     case_insensitive
                 )
                 with concurrent.futures.ProcessPoolExecutor() as pool:
-                    await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words, "wordcloud.png")
-                await ctx.send(file=discord.File(open("wordcloud.png", "rb")))
+                    image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
+                    await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
             cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
                 seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
             )
         except UserError as e:
             await ctx.send(f"Invalid Input: {e.message}")
 
-def create_wordcloud(words, filename):
+    @commands.command(
+        name = "whatdidimiss",
+        description = "Generates a wordcloud of messages posted in the channelsince the last message from the user"
+    )
+    async def whatdidimiss(self, ctx):
+        try:
+            timestamp = datetime.datetime.utcnow() - datetime.timedelta(
+                seconds = utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["max-lookback-time"])
+            )
+
+            with ctx.typing():
+                words = await utils.collect_messages(ctx, True, timestamp,
+                    config.get_config()["commands"]["whatdidimiss"]["stopwords"],
+                    True, True
+                )
+                with concurrent.futures.ProcessPoolExecutor() as pool:
+                    image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
+                    await ctx.send("Here are the messages since your last post:")
+                    await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
+        except UserError as e:
+            await ctx.send(f"Invalid input: {e.message}")
+
+def create_wordcloud(words):
     r"""Creates a wordcloud given a frequency dictionary, saves it to filename.
     Parameters
     ----------
@@ -86,15 +109,22 @@ def create_wordcloud(words, filename):
         scale = config.get_config()["commands"]["whatdidimiss"]["scale"],
         width = config.get_config()["commands"]["whatdidimiss"]["width"],
         height = config.get_config()["commands"]["whatdidimiss"]["height"],
+        background_color = config.get_config()["commands"]["whatdidimiss"]["background-colour"],
+        mode = "RGBA",
+        outline_thickness = config.get_config()["commands"]["whatdidimiss"]["outline-thickness"],
+        outline_color = config.get_config()["commands"]["whatdidimiss"]["outline-colour"],
         font_path = config.get_config()["commands"]["whatdidimiss"]["fontpath"],
         tint_emoji = config.get_config()["commands"]["whatdidimiss"]["tint"],
         emoji_cache_path = config.get_config()["commands"]["whatdidimiss"]["cache"],
         rotate_emoji = config.get_config()["commands"]["whatdidimiss"]["rotate"],
         font_size_mod = config.get_config()["commands"]["whatdidimiss"]["limit"]
     )
+    file = BytesIO()
     if words:
-        wc.generate_from_frequencies(words, False).to_file(filename)
+        wc.generate_from_frequencies(words, False).to_image().save(file, 'png')
+        file.seek(0)
     else:
         raise UserError("No words for wordcloud")
+    return file
 
 cooldown_list = dict()
