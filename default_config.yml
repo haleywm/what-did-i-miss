@@ -33,6 +33,9 @@ commands:
     cache: cache/
     # whatdidimiss command options:
     max-lookback-time: 5d
+    # The amount of time that users can make a message before .whatdidimiss and have it
+    # not stop looking further back
+    ignore-msg-time: 2m
     # Acceptable colour name formats listed at:
     # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html#color-names
     # ~ means transparent

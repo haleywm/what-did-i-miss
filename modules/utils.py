@@ -1,4 +1,4 @@
-import discord, re
+import discord, re, datetime
 from . import config
 
 class UserError(Exception):
@@ -6,7 +6,7 @@ class UserError(Exception):
         self.message = message
 
 # The regex used to recognize if a word is an external emoji
-parseEmojis = re.compile("^<:.+:\d+>$")
+parseEmojis = re.compile(r"^<:.+:\d+>$")
 
 def parse_time_to_seconds(raw_time):
     r"""Parses a time string to seconds. Takes a form such as "6h".
@@ -80,8 +80,12 @@ async def collect_messages(
                 # If only looking until the users last message, stop looking if they're the author
                 if(
                     until_last_user_msg and
-                    msg.id != ctx.message.id and
-                    msg.author == ctx.message.author
+                    msg.author == ctx.message.author and
+                    msg.created_at < datetime.datetime.utcnow() - datetime.timedelta(
+                        seconds = parse_time_to_seconds(
+                            config.get_config()["commands"]["whatdidimiss"]["ignore-msg-time"]
+                        )
+                    )
                 ):
                     break
                 else:
