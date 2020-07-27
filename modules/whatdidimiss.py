@@ -45,8 +45,7 @@ Examples:
             )):
                 raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.")
             # Checking cooldown:
-            cooldown_id = str(ctx.message.author.id) + ":" + str(ctx.message.channel.id)
-            if cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow():
+            if cooldown_in_effect(ctx):
                 raise UserError("Please wait for cooldown.")
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
@@ -67,9 +66,7 @@ Examples:
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
                     await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
-            cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
-                seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
-            )
+            add_cooldown(ctx)
         except UserError as e:
             await ctx.send(f"Invalid Input: {e.message}")
 
@@ -79,6 +76,8 @@ Examples:
     )
     async def whatdidimiss(self, ctx):
         try:
+            if cooldown_in_effect(ctx):
+                raise UserError("Please wait for cooldown.")
             timestamp = datetime.datetime.utcnow() - datetime.timedelta(
                 seconds = utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["max-lookback-time"])
             )
@@ -92,6 +91,7 @@ Examples:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
                     await ctx.send("Here are the messages since your last post:")
                     await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
+            add_cooldown(ctx)
         except UserError as e:
             await ctx.send(f"Invalid input: {e.message}")
 
@@ -126,5 +126,19 @@ def create_wordcloud(words):
     else:
         raise UserError("No words for wordcloud")
     return file
+
+def get_cooldown_id(ctx):
+    return str(ctx.message.author.id) + ":" + str(ctx.message.channel.id)
+
+
+def cooldown_in_effect(ctx):
+    cooldown_id = get_cooldown_id(ctx)
+    return cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow()
+
+def add_cooldown(ctx):
+    cooldown_id = get_cooldown_id(ctx)
+    cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
+        seconds=utils.parse_time_to_seconds(config.get_config()["commands"]["whatdidimiss"]["cooldown"])
+    )
 
 cooldown_list = dict()

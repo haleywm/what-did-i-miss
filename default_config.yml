@@ -32,7 +32,7 @@ commands:
     rotate: True
     cache: cache/
     # whatdidimiss command options:
-    max-lookback-time: 24h
+    max-lookback-time: 5d
     # Acceptable colour name formats listed at:
     # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html#color-names
     # ~ means transparent
