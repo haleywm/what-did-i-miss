@@ -1,4 +1,5 @@
 import discord, re, datetime
+from math import floor
 from . import config
 
 class UserError(Exception):
@@ -31,6 +32,61 @@ def parse_time_to_seconds(raw_time):
     elif unit == "m":
         minutes *= 60
     return minutes
+
+def parse_seconds_to_time(raw_seconds, show_seconds=False):
+    r"""Parses a integer into a huaman readable string of days, hours, minutes, and optionally seconds.
+    If the time given is less than a minute then seconds shown anyway.
+    Returns a string.
+    Parameters
+    ----------
+    raw_seconds : integer
+        The seconds to parse
+    show_seconds : bool, default=False
+        If seconds should be displayed
+    """
+    output = ""
+    time_added = False
+    if raw_seconds < 0:
+        output += "-"
+        raw_seconds *= -1
+    elif raw_seconds < 1:
+        return "No time"
+    
+    if raw_seconds > 86400:
+        time_added = True
+        unit = floor(raw_seconds / 86400)
+        output += str(unit) + " day"
+        if unit > 1:
+            output += "s, "
+        else:
+            output += ", "
+        raw_seconds %= 86400
+    if raw_seconds > 3600:
+        time_added = True
+        unit = floor(raw_seconds / 3600)
+        output += str(unit) + " hour"
+        if unit > 1:
+            output += "s, "
+        else:
+            output += ", "
+        raw_seconds %= 3600
+    if raw_seconds > 60:
+        time_added = True
+        unit = floor(raw_seconds / 60)
+        output += str(unit) + " minute"
+        if unit > 1:
+            output += "s, "
+        else:
+            output += ", "
+        raw_seconds %= 60
+    if show_seconds or not time_added:
+        unit = round(raw_seconds)
+        output += str(unit) + " second"
+        if unit > 1:
+            output += "s, "
+        else:
+            output += ", "
+    return output[:-2]
 
 def parse_bool(in_bool):
     r"""Parses a string to decide if it is true or false.
@@ -74,24 +130,34 @@ async def collect_messages(
             lambda i:type(i) is discord.TextChannel and i.permissions_for(ctx.me).read_messages,
             ctx.guild.channels))]
     words = dict()
+    time_now = datetime.datetime.utcnow()
+    # Default time_back of 0
+    # This will be set to a larger value only if until_last_user_msg is True
+    time_back = datetime.timedelta()
     for hist in histories:
         async for msg in hist(limit=None, after=timestamp, oldest_first=False):
             if msg.author is not ctx.me:
+                # Since I can't tell when the last message will be this is calculator for every
+                # message. Efficient.
                 # If only looking until the users last message, stop looking if they're the author
                 if(
                     until_last_user_msg and
                     msg.author == ctx.message.author and
-                    msg.created_at < datetime.datetime.utcnow() - datetime.timedelta(
+                    msg.created_at < time_now - datetime.timedelta(
                         seconds = parse_time_to_seconds(
                             config.get_config()["commands"]["whatdidimiss"]["ignore-msg-time"]
                         )
                     )
                 ):
+                    time_back = time_now - msg.created_at
                     break
                 else:
                     # clean_content parses @'s and #'s to be readable names, while content doesn't.
                     add_frequency(words, msg.clean_content, stopwords, case_insensitive)
-    return words
+    if until_last_user_msg:
+        return (words, time_back)
+    else:
+        return words
 
 def add_frequency(freq_dict, text, stopwords, case_insensitive):
     r"""Adds the frequency of words inside the given string to a dict.

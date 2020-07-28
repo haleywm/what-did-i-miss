@@ -83,14 +83,18 @@ Examples:
             )
 
             with ctx.typing():
-                words = await utils.collect_messages(ctx, True, timestamp,
+                (words, msg_time) = await utils.collect_messages(ctx, True, timestamp,
                     config.get_config()["commands"]["whatdidimiss"]["stopwords"],
                     True, True
                 )
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
-                    await ctx.send("Here are the messages since your last post:")
-                    await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
+                if msg_time.total_seconds == 0:
+                    time_diff = f'Hit max time of {config.get_config()["commands"]["whatdidimiss"]["max-lookback-time"]}'
+                else:
+                    time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
+                await ctx.send(f"Here are the messages since your last post: ({time_diff})")
+                await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
             add_cooldown(ctx)
         except UserError as e:
             await ctx.send(f"Invalid input: {e.message}")
