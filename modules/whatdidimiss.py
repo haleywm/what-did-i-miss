@@ -89,7 +89,7 @@ Examples:
                 )
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
-                if msg_time.total_seconds == 0:
+                if msg_time.total_seconds() == 0:
                     time_diff = f'Hit max time of {config.get_config()["commands"]["whatdidimiss"]["max-lookback-time"]}'
                 else:
                     time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
