@@ -347,7 +347,7 @@ class WordCloud(object):
                  contour_color='black', repeat=False,
                  include_numbers=False, min_word_length=0, collocation_threshold=30,
                  tint_emoji = True, rotate_emoji = True, emoji_cache_path = "./cache/",
-                 emoji_regex = re.compile(r"<:[\w]*:(\d*)>"), font_size_mod = 1.0,
+                 emoji_regex = re.compile(r"<:[\w]+:(\d*)>"), font_size_mod = 1.0,
                  outline_thickness = 0, outline_color = "black"): #modified
         if font_path is None:
             font_path = FONT_PATH
