@@ -7,7 +7,8 @@ class UserError(Exception):
         self.message = message
 
 # The regex used to recognize if a word is an external emoji
-parseEmojis = re.compile(r"^<:.+:\d+>$")
+parseEmojis = re.compile(r"(<:[\w]+:\d+>)")
+
 
 def parse_time_to_seconds(raw_time):
     r"""Parses a time string to seconds. Takes a form such as "6h".
@@ -183,11 +184,22 @@ def add_frequency(freq_dict, text, stopwords, case_insensitive):
             if case_insensitive:
                 word = word.lower()
             word = word.strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
-            if word not in stopwords and (len(word) <= MAXLEN or parseEmojis.match(word)):
-                if word in freq_dict:
-                    freq_dict[word] += 1
-                else:
-                    freq_dict[word] = 1
+            # Testing if the word is emojis
+            emojis = parseEmojis.findall(word)
+            if len(emojis) > 0:
+                for emoji in emojis:
+                    add_dict(freq_dict, emoji)
+            elif word not in stopwords and len(word) <= MAXLEN:
+                add_dict(freq_dict, word)
+
+def add_dict(freq_dict, word):
+    """Adds to a frequency dictionary
+    Used by add_frequency, but add_frequency has all the logic to only add good words
+    """
+    if word in freq_dict:
+        freq_dict[word] += 1
+    else:
+        freq_dict[word] = 1
 
 def check_perms(ctx, perms):
     """Checks if the discord bot has all the required permissions in the given channel.
