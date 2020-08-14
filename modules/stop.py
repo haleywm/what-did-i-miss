@@ -13,7 +13,7 @@ class stop(commands.Cog, name="Stop"):
         name = "stop",
         description = "Shuts down the bot if the user ID has been configured as a bot admin.",
         hidden = True,
-        enabled = config.get_config()["commands"]["stop"]["enabled"]
+        enabled = True
     )
     async def stop_program(self, ctx):
         if ctx.message.author.id in config.get_config()["admins"]:
