@@ -1,6 +1,6 @@
 import discord, re, datetime
 from math import floor
-from . import config
+from .config import IGNORE_MESSAGE_TIME, STRIP
 
 class UserError(Exception):
     def __init__(self, message="Invalid Input"):
@@ -145,9 +145,7 @@ async def collect_messages(
                     until_last_user_msg and
                     msg.author == ctx.message.author and
                     msg.created_at < time_now - datetime.timedelta(
-                        seconds = parse_time_to_seconds(
-                            config.get_config()["commands"]["whatdidimiss"]["ignore-msg-time"]
-                        )
+                        seconds = parse_time_to_seconds(IGNORE_MESSAGE_TIME)
                     )
                 ):
                     time_back = time_now - msg.created_at
@@ -183,7 +181,7 @@ def add_frequency(freq_dict, text, stopwords, case_insensitive):
         for word in text.split():
             if case_insensitive:
                 word = word.lower()
-            word = word.strip(config.get_config()["commands"]["whatdidimiss"]["strip"])
+            word = word.strip(STRIP)
             # Testing if the word is emojis
             emojis = parseEmojis.findall(word)
             if len(emojis) > 0:
