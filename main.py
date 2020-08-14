@@ -7,6 +7,8 @@ from discord.ext import commands
 from modules import whatdidimiss, stop
 from config import TOKEN
 
+from modules.cat import command
+
 PREFIX = "."
 
 bot = commands.Bot(
@@ -24,6 +26,7 @@ if __name__ == "__main__":
     # Add lines here to register additional "cogs", which are modular code sections that add commands
     bot.add_cog(whatdidimiss.whatdidimiss(bot))
     bot.add_cog(stop.stop(bot))
+    bot.add_cog(command.Cat())
 
     try:
         bot.run(TOKEN)
