@@ -1,6 +1,7 @@
 import io
 import aiohttp
 import mimetypes
+import discord
 
 
 async def get_cat_image(gif=False):
