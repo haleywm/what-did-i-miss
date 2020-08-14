@@ -76,6 +76,7 @@ Examples:
 
     @commands.command(
         name = "whatdidimiss",
+        aliases = ["wdim"],
         description = "Generates a wordcloud of messages posted in the channelsince the last message from the user"
     )
     async def whatdidimiss(self, ctx):
