@@ -1,8 +1,10 @@
+import discord
+
 from main import bot
 from discord.ext import commands
 from services.cat.api import get_cat_image
-from services.hug.utils import remove_invocation, find_user, InvalidMentionException
 from services.config import CONFIG
+from services.hug.utils import remove_invocation, find_user, InvalidUserException
 
 
 # TODO Implement error handling for cat commands
@@ -37,18 +39,22 @@ class Wholesome(commands.Cog):
         await ctx.send(file=cat)
 
     @commands.before_invoke(remove_invocation)
+<<<<<<< HEAD
     @commands.command(
         enabled = CONFIG["commands"]["hug"]["enabled"]
     )
     async def hug(self, ctx, mention):
+=======
+    @commands.command()
+    async def hug(self, ctx, target):
+>>>>>>> Add fuzzymatching for hug command and remove anonymity
         """
-            Send a secret virtual hug to someone
+            Send a virtual hug to someone
         """
         try:
-            user = await find_user(ctx.guild, mention)
-            await ctx.send(f"{user.mention} You've been sent a virtual hug! :heart:")
-        except InvalidMentionException:
-            await ctx.message.author.send('Invalid user mention. Check that the user is valid.'
-                                          f'```{ctx.message.content}```')
+            user = await find_user(ctx.guild, target)
+            await ctx.send(f"{user.mention} {ctx.message.author.name} sent you a virtual hug! :heart:")
+        except InvalidUserException:
+            await ctx.send(f'User not found. Check that the user is valid.```{ctx.message.content}```')
         except Exception as e:
             print(e)

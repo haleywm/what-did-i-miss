@@ -2,3 +2,5 @@ discord
 wordcloud
 aiohttp
 pyyaml
+fuzzywuzzy
+python-Levenshtein
