@@ -1,18 +1,18 @@
+from services import utils, wordcloud, cooldown
+from services.utils import UserError
 import discord.ext.commands as commands
-from . import utils, wordcloud
-from .utils import UserError
 import concurrent.futures, asyncio, datetime
 import discord
 from io import BytesIO
 
 # Whatdidimiss-specific config
-from .config import ENABLED, DEFAULT_TIME, MAX_TIME, STOPWORDS, MAX_LOOKBACK_TIME, COOLDOWN
+from services.config import ENABLED, DEFAULT_TIME, MAX_TIME, STOPWORDS, MAX_LOOKBACK_TIME, COOLDOWN
 
 # Wordcloud-specific config
-from .config import SCALE, WIDTH, HEIGHT, BACKGROUND_COLOUR, OUTLINE_THICKNESS, \
+from services.config import SCALE, WIDTH, HEIGHT, BACKGROUND_COLOUR, OUTLINE_THICKNESS, \
     OUTLINE_COLOUR, FONT_PATH, TINT, CACHE, ROTATE, LIMIT
 
-class whatdidimiss(commands.Cog, name="Wordclouds"):
+class Whatdidimiss(commands.Cog, name="Wordclouds"):
     r"""Class for defining a word cloud generator command for Discord.py
     Does not take input apart from what is defined by the spec for adding cogs.
     """
@@ -43,17 +43,14 @@ Examples:
         case_insensitive = "True"
         ):
         try:
-            # Checking for appropriate permissions
-            # Only check if the bot type is a member of a server
-            if not utils.check_perms(ctx, discord.Permissions(
-                read_message_history = True,
-                attach_files = True,
-                send_messages = True
-            )):
-                raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.")
             # Checking cooldown:
-            if cooldown_in_effect(ctx):
+            if cooldown.cooldown_in_effect(ctx):
                 raise UserError("Please wait for cooldown.")
+            cooldown.add_cooldown(ctx, COOLDOWN)
+            
+            # Checking for appropriate permissions
+            check_cmd_perms(ctx)
+
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(MAX_TIME) or seconds < 1:
                 raise UserError("Time outside of allowed range")
@@ -69,10 +66,12 @@ Examples:
                 words = await utils.collect_messages(ctx, one_channel, timestamp, STOPWORDS, case_insensitive)
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
-                    await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
-            add_cooldown(ctx)
+                    await ctx.send(f"Messages over: {in_time}", file=discord.File(fp=image, filename="wordcloud.png"))
         except UserError as e:
             await ctx.send(f"Invalid Input: {e.message}")
+            # Removing the cooldown as an act of mercy
+            if e.no_cooldown:
+                cooldown.remove_cooldown(ctx)
 
     @commands.command(
         name = "whatdidimiss",
@@ -81,8 +80,14 @@ Examples:
     )
     async def whatdidimiss(self, ctx):
         try:
-            if cooldown_in_effect(ctx):
+            # Checking cooldown:
+            if cooldown.cooldown_in_effect(ctx):
                 raise UserError("Please wait for cooldown.")
+            cooldown.add_cooldown(ctx, COOLDOWN)
+            
+            # Checking for appropriate permissions
+            check_cmd_perms(ctx)
+
             timestamp = datetime.datetime.utcnow() - datetime.timedelta(
                 seconds = utils.parse_time_to_seconds(MAX_LOOKBACK_TIME)
             )
@@ -95,9 +100,8 @@ Examples:
                     time_diff = f'Hit max time of {MAX_LOOKBACK_TIME}'
                 else:
                     time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
-                await ctx.send(f"Here are the messages since your last post: ({time_diff})")
-                await ctx.send(file=discord.File(fp=image, filename="wordcloud.png"))
-            add_cooldown(ctx)
+                await ctx.send(f"Here are the messages since your last post: ({time_diff})", file=discord.File(fp=image, filename="wordcloud.png"))
+            cooldown.add_cooldown(ctx, COOLDOWN)
         except UserError as e:
             await ctx.send(f"Invalid input: {e.message}")
 
@@ -130,24 +134,15 @@ def create_wordcloud(words):
         wc.generate_from_frequencies(words, False).to_image().save(file, 'png')
         file.seek(0)
     else:
-        raise UserError("No words for wordcloud")
+        raise UserError("No words for wordcloud", True)
     return file
 
-
-def get_cooldown_id(ctx):
-    return str(ctx.message.author.id) + ":" + str(ctx.message.channel.id)
-
-
-def cooldown_in_effect(ctx):
-    cooldown_id = get_cooldown_id(ctx)
-    return cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow()
-
-
-def add_cooldown(ctx):
-    cooldown_id = get_cooldown_id(ctx)
-    cooldown_list[cooldown_id] = datetime.datetime.utcnow() + datetime.timedelta(
-        seconds=utils.parse_time_to_seconds(COOLDOWN)
-    )
-
-
-cooldown_list = dict()
+def check_cmd_perms(ctx):
+    # Checking for appropriate permissions
+    # Only check if the bot type is a member of a server
+    if not utils.check_perms(ctx, discord.Permissions(
+        read_message_history = True,
+        attach_files = True,
+        send_messages = True
+    )):
+        raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.", True)

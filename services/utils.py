@@ -1,10 +1,12 @@
 import discord, re, datetime
 from math import floor
-from .config import IGNORE_MESSAGE_TIME, STRIP
+from services.config import IGNORE_MESSAGE_TIME, STRIP
 
 class UserError(Exception):
-    def __init__(self, message="Invalid Input"):
+    def __init__(self, message="Invalid Input", no_cooldown=False):
         self.message = message
+        # No cooldown, this usually doesn't matter but can be used to say that an error can be used to stop cooldown. Must be implemented when relevant.
+        self.no_cooldown = no_cooldown
 
 # The regex used to recognize if a word is an external emoji
 parseEmojis = re.compile(r"(<:[\w]+:\d+>)")
@@ -161,7 +163,7 @@ async def collect_messages(
 def add_frequency(freq_dict, text, stopwords, case_insensitive):
     r"""Adds the frequency of words inside the given string to a dict.
     Strips characters at the start and end as defined by
-        config.get_config()["commands"]["whatdidimiss"]["strip"]
+        config.STRIP
     Ignores words longer than 20 characters unless they're of the emoji format.
     Parameters
     ----------

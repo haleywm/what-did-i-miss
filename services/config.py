@@ -15,10 +15,10 @@ IGNORE_MESSAGE_TIME = '2m'  # Recent messages will be left out of the generated 
 STOPWORDS = []              # Create a list of ignored words from the stopwords.txt file in the wordcloud directory
 
 try:
-    stopwords_file = open("modules/wordcloud/stopwords")
+    stopwords_file = open("stopwords.txt")
 
     for word in stopwords_file:
-        STOPWORDS.append(word)
+        STOPWORDS.append(word.strip())
 except Exception as e:
     print(e)
 
@@ -38,7 +38,7 @@ FONT_PATH = 'fonts/MergedFonts.ttf'
 
 # Acceptable colour name formats listed at:
 # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html#color-names
-# ~ means transparent
+# None means transparent
 BACKGROUND_COLOUR = None
 OUTLINE_COLOUR = 'grey'
 OUTLINE_THICKNESS = 4

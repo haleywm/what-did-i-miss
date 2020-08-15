@@ -1,7 +1,8 @@
 import discord.ext.commands as commands
-from . import config
+from services import config
+from services.checks import admin_check, check_handler_shoveoff
 
-class stop(commands.Cog, name="Stop"):
+class Stop(commands.Cog, name="Stop"):
     r"""Class for stopping the bot defined by Discord.py
     Does not take input apart from what is defined by the spec for adding cogs.
     """
@@ -15,10 +16,11 @@ class stop(commands.Cog, name="Stop"):
         hidden = True,
         enabled = True
     )
+    @commands.check(admin_check)
     async def stop_program(self, ctx):
-        if ctx.message.author.id in config.get_config()["admins"]:
-            print("Closing due to admin command...")
-            await ctx.send("Ok bye!!")
-            await ctx.bot.logout()
-        else:
-            await ctx.send("You can't tell me what to do")
+        print("Closing due to admin command...")
+        await ctx.send("Ok bye!!")
+        await ctx.bot.logout()
+    
+    cog_command_error = check_handler_shoveoff
+    
