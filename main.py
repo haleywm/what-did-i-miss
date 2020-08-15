@@ -4,7 +4,8 @@ import sys, os
 import discord
 from discord.ext import commands
 # This line only imports the modules defined in modules/__init__.py, which should only be cogs
-from cogs import whatdidimiss, stop
+from cogs import whatdidimiss, stop, cat
+
 try:
     from config import TOKEN, ADMINS
 except ImportError as e:
@@ -37,6 +38,7 @@ Please migrate your settings by editing modules/config.py
     # Add lines here to register additional "cogs", which are modular code sections that add commands
     bot.add_cog(whatdidimiss.Whatdidimiss(bot))
     bot.add_cog(stop.Stop(bot))
+    bot.add_cog(cat.Cat())
 
     try:
         bot.run(TOKEN)
