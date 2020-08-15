@@ -2,7 +2,7 @@ import discord
 
 from main import bot, PREFIX
 from discord.ext import commands
-from .api_service import get_cat_image
+from modules.cat.api_service import get_cat_image
 
 
 class Cat(commands.Cog):
