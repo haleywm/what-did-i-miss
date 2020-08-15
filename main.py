@@ -36,9 +36,9 @@ if __name__ == "__main__":
 Please migrate your settings by editing modules/config.py
         """)
     # Add lines here to register additional "cogs", which are modular code sections that add commands
-    bot.add_cog(whatdidimiss.whatdidimiss(bot))
-    bot.add_cog(stop.stop(bot))
-    bot.add_cog(command.Cat())
+    bot.add_cog(whatdidimiss.Whatdidimiss(bot))
+    bot.add_cog(stop.Stop(bot))
+    bot.add_cog(cat.Cat())
 
     try:
         bot.run(TOKEN)
