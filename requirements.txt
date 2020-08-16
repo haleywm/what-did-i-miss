@@ -1,4 +1,8 @@
 discord
 wordcloud
 aiohttp
+<<<<<<< HEAD
 pyyaml
+=======
+sqlalchemy
+>>>>>>> Partially added databse stuff
