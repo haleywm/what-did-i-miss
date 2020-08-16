@@ -147,7 +147,7 @@ async def collect_messages(
                     until_last_user_msg and
                     msg.author == ctx.message.author and
                     msg.created_at < time_now - datetime.timedelta(
-                        seconds = parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["ignore-message-time"])
+                        seconds = parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["ignore-msg-time"])
                     )
                 ):
                     time_back = time_now - msg.created_at
