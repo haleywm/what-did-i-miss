@@ -6,7 +6,7 @@ A Discord Bot that lets you know what happened since you last posted.
 
 The setup of the bot is relatively simple. First, you must setup a discord bot (https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token), and then get the private key.
 
-Next, clone this repo and extract it and whatever, and create a file called `config.py`. Copy the file `sample_config.py`, and fill in at least the KEY, as well as the other values if you'd like. `modules/config.py` contains additional configuration options that are used for specific server values.
+Next, clone this repo and extract it and whatever, and create a file called `config.yml` containing `key: {bot-private-key}`. Read `default-config.yml` to get additional configuration options, and place these in your `config.yml` file to overwrite these values. **DO NOT MODIFY default-config.yml**.
 
 Next, you must have installed Python 3.8, as well as pip, and gcc. Install the package dependencies with `python -m pip install --update pip && pip install -r requirements.txt`.
 
@@ -33,6 +33,8 @@ This is a bot that generates wordclouds based on messages that have been posted 
 
 - `Python 3.8`
 - `pip`
+- `libyaml-dev`
+    - Not strictly necessary, but improves yaml parse speed and security
 
 ## Planned Features
 

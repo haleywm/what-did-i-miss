@@ -1,3 +1,4 @@
 discord
 wordcloud
 aiohttp
+pyyaml
