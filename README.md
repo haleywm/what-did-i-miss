@@ -6,11 +6,13 @@ A Discord Bot that lets you know what happened since you last posted.
 
 The setup of the bot is relatively simple. First, you must setup a discord bot (https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token), and then get the private key.
 
-Next, clone this repo and extract it and whatever, and create a file called `config.get_config().yml` containing `key: {bot-private-key}`. Read `default-config.get_config().yml` to get additional configuration options, and place these in your `config.get_config().yml` file to overwrite these values. **DO NOT MODIFY default-config.get_config().yml**.
+Next, clone this repo and extract it and whatever, and create a file called `config.py`. Copy the file `sample_config.py`, and fill in at least the KEY, as well as the other values if you'd like. `modules/config.py` contains additional configuration options that are used for specific server values.
 
 Next, you must have installed Python 3.8, as well as pip, and gcc. Install the package dependencies with `python -m pip install --update pip && pip install -r requirements.txt`.
 
 Lastly, the application can be run with `python main.py`.
+
+While nothing exists at the moment, the bot startup can be automated with various tools.
 
 The bot requires the current permissions, in order to run:
 
