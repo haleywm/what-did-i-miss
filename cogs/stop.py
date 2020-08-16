@@ -1,5 +1,4 @@
 import discord.ext.commands as commands
-from services import config
 from services.checks import admin_check, check_handler_shoveoff
 
 class Stop(commands.Cog, name="Stop"):

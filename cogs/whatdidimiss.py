@@ -5,12 +5,8 @@ import concurrent.futures, asyncio, datetime
 import discord
 from io import BytesIO
 
-# Whatdidimiss-specific config
-from services.config import ENABLED, DEFAULT_TIME, MAX_TIME, STOPWORDS, MAX_LOOKBACK_TIME, COOLDOWN
+from services.config import CONFIG
 
-# Wordcloud-specific config
-from services.config import SCALE, WIDTH, HEIGHT, BACKGROUND_COLOUR, OUTLINE_THICKNESS, \
-    OUTLINE_COLOUR, FONT_PATH, TINT, CACHE, ROTATE, LIMIT
 
 class Whatdidimiss(commands.Cog, name="Wordclouds"):
     r"""Class for defining a word cloud generator command for Discord.py
@@ -35,10 +31,10 @@ Examples:
     .wordcloud 45m False False
         (Generates a wordcloud for the last 45 minutes, in every channel on the server, case sensitive)
         """,
-        enabled = ENABLED
+        enabled = CONFIG["commands"]["whatdidimiss"]["enabled"]
     )
     async def wordcloud(self, ctx,
-        in_time = DEFAULT_TIME,
+        in_time = CONFIG["commands"]["whatdidimiss"]["defaulttime"],
         one_channel = "True",
         case_insensitive = "True"
         ):
@@ -46,13 +42,13 @@ Examples:
             # Checking cooldown:
             if cooldown.cooldown_in_effect(ctx):
                 raise UserError("Please wait for cooldown.")
-            cooldown.add_cooldown(ctx, COOLDOWN)
+            cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
             
             # Checking for appropriate permissions
             check_cmd_perms(ctx)
 
             seconds = utils.parse_time_to_seconds(in_time)
-            if  seconds > utils.parse_time_to_seconds(MAX_TIME) or seconds < 1:
+            if  seconds > utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
                 raise UserError("Time outside of allowed range")
 
             one_channel = utils.parse_bool(one_channel)
@@ -63,7 +59,7 @@ Examples:
             # And now for the slow stuff
             with ctx.typing():
                 # Next, recursively grabbing messages and appending them to a long ass string
-                words = await utils.collect_messages(ctx, one_channel, timestamp, STOPWORDS, case_insensitive)
+                words = await utils.collect_messages(ctx, one_channel, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], case_insensitive)
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
                     await ctx.send(f"Messages over: {in_time}", file=discord.File(fp=image, filename="wordcloud.png"))
@@ -83,25 +79,25 @@ Examples:
             # Checking cooldown:
             if cooldown.cooldown_in_effect(ctx):
                 raise UserError("Please wait for cooldown.")
-            cooldown.add_cooldown(ctx, COOLDOWN)
+            cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
             
             # Checking for appropriate permissions
             check_cmd_perms(ctx)
 
             timestamp = datetime.datetime.utcnow() - datetime.timedelta(
-                seconds = utils.parse_time_to_seconds(MAX_LOOKBACK_TIME)
+                seconds = utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["max-lookback-time"])
             )
 
             with ctx.typing():
-                (words, msg_time) = await utils.collect_messages(ctx, True, timestamp, STOPWORDS, True, True)
+                (words, msg_time) = await utils.collect_messages(ctx, True, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], True, True)
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
                 if msg_time.total_seconds() == 0:
-                    time_diff = f'Hit max time of {MAX_LOOKBACK_TIME}'
+                    time_diff = f'Hit max time of {CONFIG["commands"]["whatdidimiss"]["max-lookback-time"]}'
                 else:
                     time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
                 await ctx.send(f"Here are the messages since your last post: ({time_diff})", file=discord.File(fp=image, filename="wordcloud.png"))
-            cooldown.add_cooldown(ctx, COOLDOWN)
+            cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
         except UserError as e:
             await ctx.send(f"Invalid input: {e.message}")
 
@@ -116,18 +112,18 @@ def create_wordcloud(words):
         for generation.
     """
     wc = wordcloud.WordCloud(
-        scale = SCALE,
-        width = WIDTH,
-        height = HEIGHT,
-        background_color = BACKGROUND_COLOUR,
+        scale = CONFIG["commands"]["whatdidimiss"]["scale"],
+        width = CONFIG["commands"]["whatdidimiss"]["width"],
+        height = CONFIG["commands"]["whatdidimiss"]["height"],
+        background_color = CONFIG["commands"]["whatdidimiss"]["background-colour"],
         mode = "RGBA",
-        outline_thickness = OUTLINE_THICKNESS,
-        outline_color = OUTLINE_COLOUR,
-        font_path = FONT_PATH,
-        tint_emoji = TINT,
-        emoji_cache_path = CACHE,
-        rotate_emoji = ROTATE,
-        font_size_mod = LIMIT
+        outline_thickness = CONFIG["commands"]["whatdidimiss"]["outline-thickness"],
+        outline_color = CONFIG["commands"]["whatdidimiss"]["outline-colour"],
+        font_path = CONFIG["commands"]["whatdidimiss"]["fontpath"],
+        tint_emoji = CONFIG["commands"]["whatdidimiss"]["tint"],
+        emoji_cache_path = CONFIG["commands"]["whatdidimiss"]["cache"],
+        rotate_emoji = CONFIG["commands"]["whatdidimiss"]["rotate"],
+        font_size_mod = CONFIG["commands"]["whatdidimiss"]["limit"]
     )
     file = BytesIO()
     if words:

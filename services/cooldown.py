@@ -2,7 +2,6 @@
 # Establishes a cooldown system that can be used by different commands
 
 import datetime
-from services.config import COOLDOWN
 import services.utils as utils
 
 def get_cooldown_id(ctx):
