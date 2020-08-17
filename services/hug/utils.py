@@ -2,11 +2,12 @@ import discord
 import re
 from services.utils import check_perms
 from fuzzywuzzy import fuzz
+from services.config import CONFIG
 
 
 # TODO Implement logging if/when a log handler is added
 async def remove_invocation(cog, ctx):
-    if check_perms(ctx, discord.Permissions(
+    if CONFIG["commands"]["hug"]["delete-message"] and check_perms(ctx, discord.Permissions(
         manage_messages = True
     )):
         try:
