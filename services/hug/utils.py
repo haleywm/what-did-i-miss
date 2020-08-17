@@ -27,7 +27,10 @@ async def find_user(guild, user):
         user_id = await convert_mention_to_id(user)
         member = guild.get_member(user_id)
     else:
-        member = await fuzzymatch_name(guild, user)
+        if CONFIG["commands"]["hug"]["fuzzy-matching"]:
+            member = await fuzzymatch_name(guild, user)
+        else:
+            member = None
 
     return member
 

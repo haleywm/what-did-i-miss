@@ -48,7 +48,10 @@ class Wholesome(commands.Cog):
         """
         try:
             user = await find_user(ctx.guild, target)
-            await ctx.send(f"{user.mention} {ctx.message.author.name} sent you a virtual hug! :heart:")
+            if user:
+                await ctx.send(f"{user.mention} {ctx.message.author.name} sent you a virtual hug! :heart:")
+            else:
+                await ctx.author.send("Sorry, I couldn't find anyone with that name to hug :(")
         except InvalidUserException:
             await ctx.send(f'User not found. Check that the user is valid.```{ctx.message.content}```')
         except Exception as e:
