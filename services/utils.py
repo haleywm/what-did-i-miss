@@ -1,6 +1,6 @@
 import discord, re, datetime
 from math import floor
-from services.config import IGNORE_MESSAGE_TIME, STRIP
+from services.config import CONFIG
 
 class UserError(Exception):
     def __init__(self, message="Invalid Input", no_cooldown=False):
@@ -147,7 +147,7 @@ async def collect_messages(
                     until_last_user_msg and
                     msg.author == ctx.message.author and
                     msg.created_at < time_now - datetime.timedelta(
-                        seconds = parse_time_to_seconds(IGNORE_MESSAGE_TIME)
+                        seconds = parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["ignore-msg-time"])
                     )
                 ):
                     time_back = time_now - msg.created_at
@@ -183,7 +183,7 @@ def add_frequency(freq_dict, text, stopwords, case_insensitive):
         for word in text.split():
             if case_insensitive:
                 word = word.lower()
-            word = word.strip(STRIP)
+            word = word.strip(CONFIG["commands"]["whatdidimiss"]["strip"])
             # Testing if the word is emojis
             emojis = parseEmojis.findall(word)
             if len(emojis) > 0:
@@ -216,22 +216,3 @@ def check_perms(ctx, perms):
     """
     # Checks that all permissions are present in context's channel, if the channel is part of a guild (server)
     return type(ctx.me) is not discord.Member or ctx.channel.permissions_for(ctx.me).is_superset(perms)
-
-def merge_dicts(dict_one, dict_two):
-    """Merges two dicts
-    Recursively merges sub-dicts, rather than overwriting them at the top level as update() does.
-    Parameters
-    ----------
-    dict_one : dict
-        The dictionary for values to be merged into. This dictionary is written to.
-    dict_two : dict
-        The dictionary for values to be read from.
-    """
-    # Merges dict_two into dict_one, merging dicts and only overwriting values with the same name:
-    for key, val in dict_two.items():
-        if type(val) is dict and key in dict_one and type(dict_one[key]) is dict:
-            merge_dicts(dict_one[key], val)
-        else:
-            dict_one[key] = val
-            
-            

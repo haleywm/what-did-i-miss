@@ -1,44 +1,51 @@
-"""
-    CONFIGURATION OPTIONS FOR MODULE: WHATDIDIMISS
-"""
+import sys
+from yaml import load, YAMLError
 
-ENABLED = True
 
-MAX_TIME = '7d'             # Valid units: m, d, h
-DEFAULT_TIME = '6h'         # Setting this value too high or negative can cause overflow errors
-MAX_LOOKBACK_TIME = '5d'
+def __merge_dicts(dict_one, dict_two):
+    """Merges two dicts
+    Recursively merges sub-dicts, rather than overwriting them at the top level as update() does.
+    Parameters
+    ----------
+    dict_one : dict
+        The dictionary for values to be merged into. This dictionary is written to.
+    dict_two : dict
+        The dictionary for values to be read from.
+    """
+    # Merges dict_two into dict_one, merging dicts and only overwriting values with the same name:
+    for key, val in dict_two.items():
+        if type(val) is dict and key in dict_one and type(dict_one[key]) is dict:
+            __merge_dicts(dict_one[key], val)
+        else:
+            dict_one[key] = val
 
-COOLDOWN = '30s'            # Per user, per channel
-
-STRIP = '.,!?\'"`'          # Stripped from the front and end of words
-IGNORE_MESSAGE_TIME = '2m'  # Recent messages will be left out of the generated wordcloud
-STOPWORDS = []              # Create a list of ignored words from the stopwords.txt file in the wordcloud directory
 
 try:
-    stopwords_file = open("stopwords.txt")
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
+# Loading config data, catching errors in a user friendly way
+try:
+    try:
+        CONFIG = load(open("default_config.yml"), Loader=Loader)
+    except (FileNotFoundError, YAMLError):
+        print("The default_config.yml file has been moved or deleted. Please don't touch it.")
+        sys.exit(1)
+    __merge_dicts(CONFIG, load(open("config.yml"), Loader=Loader))
+except FileNotFoundError:
+    print("Please create a config.yml file containing the discord bot private key.")
+    sys.exit(1)
+except YAMLError:
+    print("Please create a valid config.yml as per the example file, or the README")
+    sys.exit(1)
 
-    for word in stopwords_file:
-        STOPWORDS.append(word.strip())
-except Exception as e:
-    print(e)
+with open("stopwords.txt") as stoplist:
+    CONFIG["commands"]["whatdidimiss"]["stopwords"] = [line[:-1] for line in stoplist.readlines()]
 
-
-"""
-    CONFIGURATION OPTIONS FOR MODULE: WORDCLOUD
-"""
-
-SCALE = 2
-WIDTH = 600
-HEIGHT = 300
-LIMIT = 0.5
-TINT = True
-ROTATE = True
-CACHE = 'cache/'
-FONT_PATH = 'fonts/MergedFonts.ttf'
-
-# Acceptable colour name formats listed at:
-# https://pillow.readthedocs.io/en/stable/reference/ImageColor.html#color-names
-# None means transparent
-BACKGROUND_COLOUR = None
-OUTLINE_COLOUR = 'grey'
-OUTLINE_THICKNESS = 4
+# This method is how other modules will interact with this and get the config dict
+def get_config():
+    r"""Returns the config dictionary.
+    Dictionary is built by parsing default_config.yml
+    And then overwriting with values defined in config.yml
+    """
+    return CONFIG

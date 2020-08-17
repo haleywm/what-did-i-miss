@@ -3,3 +3,4 @@ wordcloud
 aiohttp
 fuzzywuzzy
 python-Levenshtein
+pyyaml
