@@ -44,16 +44,17 @@ async def fuzzymatch_name(guild, user):
     """
         If the supplied user string is at least 60% similar to an existing guild user, consider that a match
     """
+    best_match = (None, -1)  # Member object and fuzzy ratio
     for member in guild.members:
-        ratio_required = 60
+        if member.nick is not None:
+            ratio = fuzz.partial_ratio(user.lower(), member.nick.lower())
+        else:
+            ratio = fuzz.partial_ratio(user.lower(), member.name.lower())
 
-        nick_match = member.nick is not None and fuzz.ratio(member.nick.lower(), user.lower()) > ratio_required
-        name_match = fuzz.ratio(member.name.lower(), user.lower()) > ratio_required
+        if ratio > best_match[1]:
+            best_match = (member, ratio)
 
-        if nick_match or name_match:
-            return member
-
-    raise InvalidUserException
+    return best_match[0]
 
 
 class InvalidUserException(Exception):
