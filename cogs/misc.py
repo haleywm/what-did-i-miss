@@ -39,15 +39,10 @@ class Wholesome(commands.Cog):
         await ctx.send(file=cat)
 
     @commands.before_invoke(remove_invocation)
-<<<<<<< HEAD
     @commands.command(
         enabled = CONFIG["commands"]["hug"]["enabled"]
     )
-    async def hug(self, ctx, mention):
-=======
-    @commands.command()
     async def hug(self, ctx, target):
->>>>>>> Add fuzzymatching for hug command and remove anonymity
         """
             Send a virtual hug to someone
         """
