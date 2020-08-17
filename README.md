@@ -38,10 +38,14 @@ This is a bot that generates wordclouds based on messages that have been posted 
 
 ## Planned Features
 
-I'm planning on adding several features depending on the opinions and suggestions of my friends, including potential features such as:
-
-- Recognizing emoticons and adding them to wordclouds
-- Parsing markov chains from user input
+- More minor "fun" features
+- Re-implementation of the help system in a better structured way
+- In built database for allowing server admins to set server-specific config
+- Config parser to ensure that values are correctly set
+- Text parsing:
+    - Possibly fun stuff involving markov chains
+    - Functionality to load data from news articles
+    - Other lexical fun
 
 ## Credits
 
