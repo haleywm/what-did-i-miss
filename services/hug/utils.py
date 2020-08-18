@@ -21,7 +21,7 @@ async def remove_invocation(cog, ctx):
 
 
 async def find_user(guild, user):
-    is_mention = re.search(r'<@!\d+>', user)
+    is_mention = re.search(r'<@!?\d+>', user)
 
     if is_mention:
         user_id = await convert_mention_to_id(user)

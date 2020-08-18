@@ -55,4 +55,4 @@ class Wholesome(commands.Cog):
         except InvalidUserException:
             await ctx.send(f'User not found. Check that the user is valid.```{ctx.message.content}```')
         except Exception as e:
-            print(e)
+            raise e
