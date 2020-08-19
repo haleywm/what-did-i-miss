@@ -24,10 +24,10 @@ def parse_time_to_seconds(raw_time):
     try:
         minutes = int(raw_time[:-1])
     except ValueError:
-        raise UserError("Invalid time duration.")
+        raise UserError("Invalid time duration.", True)
     unit = raw_time[-1].lower()
     if not unit in units:
-        raise UserError("Invalid time unit")
+        raise UserError("Invalid time unit", True)
     if unit == "d":
         minutes *= 86400
     elif unit == "h":
