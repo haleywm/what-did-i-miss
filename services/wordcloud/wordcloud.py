@@ -356,7 +356,7 @@ class WordCloud(object):
             if version[0] < "2" and version[2] < "5":
                 colormap = "hsv"
             else:
-                colormap = "viridis"
+                colormap = "virdis"
         self.colormap = colormap
         self.collocations = collocations
         self.font_path = font_path
@@ -411,6 +411,8 @@ class WordCloud(object):
         self.outline_thickness = outline_thickness #modified
         self.outline_color = outline_color #modified
         self.outline_mult = 0.03
+        self.outline_offset = 0.2
+        self.outline_sensitivity = 0.7
 
     def fit_words(self, frequencies):
         """Create a word_cloud from words and frequencies.
@@ -749,7 +751,7 @@ class WordCloud(object):
                 req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
                 b = urlopen(req).read()
             except:
-                print("error")
+                print("Failed to fetch emoji: " + id)
                 return "{}error.png".format(path)
             f = open(name, "wb")
             f.write(b)
@@ -780,7 +782,14 @@ class WordCloud(object):
             c.putalpha(i.split()[3]) #give i's alpha channel to c
             i = c
         img.paste(i, p, i)
-        
+    def get_outline(self, color): #modified
+        #colors are strings, so this method is a bit pythonic
+        c = [ int(a.strip())/255 for a in color[4:-1].split(',') ]
+        c = [ *colorsys.rgb_to_hsv(*c) ]
+        c[2] -= np.sign(c[2] - self.outline_sensitivity) * self.outline_offset
+        c = [ *colorsys.hsv_to_rgb(*c) ]
+        c = [ int(min(255, max(0, a*255))) for a in c ]
+        return "rgb({}, {}, {})".format(*c)
     def to_image(self): 
         self._check_generated()
         if self.mask is not None:
@@ -804,7 +813,12 @@ class WordCloud(object):
                 font, orientation=orientation)
             pos = (int(position[1] * self.scale),
                    int(position[0] * self.scale))
-            draw.text(pos, word, fill=color, font=transposed_font, stroke_width=int(font_size * self.scale * self.outline_mult), stroke_fill=self.outline_color)
+            self.get_outline(color)
+            outline = self.outline_color
+            if(font_size > 30):
+                outline = self.get_outline(color)
+            outline_size = max(int(font_size * self.scale * self.outline_mult), 1)
+            draw.text(pos, word, fill=color, font=transposed_font, stroke_width=outline_size, stroke_fill=outline)
         return self._draw_contour(img=img)
 
     def recolor(self, random_state=None, color_func=None, colormap=None):

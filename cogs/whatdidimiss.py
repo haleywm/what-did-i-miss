@@ -4,6 +4,7 @@ import discord.ext.commands as commands
 import concurrent.futures, asyncio, datetime
 import discord
 from io import BytesIO
+import secrets
 
 from services.config import CONFIG
 
@@ -123,7 +124,8 @@ def create_wordcloud(words):
         tint_emoji = CONFIG["commands"]["whatdidimiss"]["tint"],
         emoji_cache_path = CONFIG["commands"]["whatdidimiss"]["cache"],
         rotate_emoji = CONFIG["commands"]["whatdidimiss"]["rotate"],
-        font_size_mod = CONFIG["commands"]["whatdidimiss"]["limit"]
+        font_size_mod = CONFIG["commands"]["whatdidimiss"]["limit"],
+        colormap=secrets.choice(CONFIG["commands"]["whatdidimiss"]["colormaps"])
     )
     file = BytesIO()
     if words:
