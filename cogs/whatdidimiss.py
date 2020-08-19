@@ -91,7 +91,7 @@ Examples:
                     time_diff = f'Hit max time of {CONFIG["commands"]["whatdidimiss"]["max-lookback-time"]}'
                 else:
                     time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
-                await ctx.send(f"Heres what happened since your last post: ({time_diff})", file=discord.File(fp=image, filename="wordcloud.png"))
+                await ctx.send(f"Heres what happened since your last post: ({time_diff} ago)", file=discord.File(fp=image, filename="wordcloud.png"))
             cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
         except UserError as e:
             await ctx.send(f":warning:  {e.message}")
