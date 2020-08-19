@@ -10,9 +10,15 @@ def get_cooldown_id(ctx):
 
 
 def cooldown_in_effect(ctx):
-    "Returns a boolean True or False to say if a cooldown is in effect for the current context"
+    "Returns the tuple: (User on Cooldown boolean, Seconds remaining)"
     cooldown_id = get_cooldown_id(ctx)
-    return cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow()
+    on_cooldown = cooldown_id in cooldown_list and cooldown_list[cooldown_id] > datetime.datetime.utcnow()
+    
+    remaining = 0
+    if on_cooldown:
+        remaining = int((cooldown_list[cooldown_id] - datetime.datetime.utcnow()).total_seconds())
+    
+    return on_cooldown, remaining
 
 
 def add_cooldown(ctx, down_time):
