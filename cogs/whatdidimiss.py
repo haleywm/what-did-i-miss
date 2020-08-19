@@ -40,17 +40,14 @@ Examples:
         case_insensitive = "True"
         ):
         try:
-            # Checking cooldown:
-            if cooldown.cooldown_in_effect(ctx):
-                raise UserError("Please wait for cooldown.")
-            cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
+            await self.check_cooldown(ctx)
             
             # Checking for appropriate permissions
             check_cmd_perms(ctx)
 
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
-                raise UserError("Time outside of allowed range")
+                raise UserError("Thats too much time! 7d Maximum!", True)
 
             one_channel = utils.parse_bool(one_channel)
             case_insensitive = utils.parse_bool(case_insensitive)
@@ -63,9 +60,9 @@ Examples:
                 words = await utils.collect_messages(ctx, one_channel, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], case_insensitive)
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
-                    await ctx.send(f"Messages over: {in_time}", file=discord.File(fp=image, filename="wordcloud.png"))
+                    await ctx.send(f"Heres what happened in the past: {in_time}", file=discord.File(fp=image, filename="wordcloud.png"))
         except UserError as e:
-            await ctx.send(f"Invalid Input: {e.message}")
+            await ctx.send(f":warning:  {e.message}")
             # Removing the cooldown as an act of mercy
             if e.no_cooldown:
                 cooldown.remove_cooldown(ctx)
@@ -77,10 +74,7 @@ Examples:
     )
     async def whatdidimiss(self, ctx):
         try:
-            # Checking cooldown:
-            if cooldown.cooldown_in_effect(ctx):
-                raise UserError("Please wait for cooldown.")
-            cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
+            await self.check_cooldown(ctx)
             
             # Checking for appropriate permissions
             check_cmd_perms(ctx)
@@ -97,10 +91,17 @@ Examples:
                     time_diff = f'Hit max time of {CONFIG["commands"]["whatdidimiss"]["max-lookback-time"]}'
                 else:
                     time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
-                await ctx.send(f"Here are the messages since your last post: ({time_diff})", file=discord.File(fp=image, filename="wordcloud.png"))
+                await ctx.send(f"Heres what happened since your last post: ({time_diff})", file=discord.File(fp=image, filename="wordcloud.png"))
             cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
         except UserError as e:
-            await ctx.send(f"Invalid input: {e.message}")
+            await ctx.send(f":warning:  {e.message}")
+    async def check_cooldown(self, ctx):
+        c, t = cooldown.cooldown_in_effect(ctx)
+        if c:
+            t = utils.parse_seconds_to_time(t)
+            raise UserError(f"Relax. Your cooldown expires in {t}!")
+        cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
+
 
 def create_wordcloud(words):
     r"""Creates a wordcloud given a frequency dictionary, saves it to filename.
@@ -132,7 +133,7 @@ def create_wordcloud(words):
         wc.generate_from_frequencies(words, False).to_image().save(file, 'png')
         file.seek(0)
     else:
-        raise UserError("No words for wordcloud", True)
+        raise UserError("I need words for a wordcloud!", True)
     return file
 
 def check_cmd_perms(ctx):
