@@ -745,9 +745,14 @@ class WordCloud(object):
         name = "{}{}.png".format(path, id)
         if(not os.path.isfile(name)):
             url = "https://cdn.discordapp.com/emojis/{}.png".format(id)
-            req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            try:
+                req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                b = urlopen(req).read()
+            except:
+                print("error")
+                return "{}error.png".format(path)
             f = open(name, "wb")
-            f.write(urlopen(req).read())
+            f.write(b)
             f.close()
         return name
     
