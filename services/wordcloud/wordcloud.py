@@ -356,7 +356,7 @@ class WordCloud(object):
             if version[0] < "2" and version[2] < "5":
                 colormap = "hsv"
             else:
-                colormap = "virdis"
+                colormap = "viridis"
         self.colormap = colormap
         self.collocations = collocations
         self.font_path = font_path
@@ -813,7 +813,6 @@ class WordCloud(object):
                 font, orientation=orientation)
             pos = (int(position[1] * self.scale),
                    int(position[0] * self.scale))
-            self.get_outline(color)
             outline = self.outline_color
             if(font_size > 30):
                 outline = self.get_outline(color)
