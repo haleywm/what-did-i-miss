@@ -40,7 +40,8 @@ class Wholesome(commands.Cog):
 
     @commands.before_invoke(remove_invocation)
     @commands.command(
-        enabled = CONFIG["commands"]["hug"]["enabled"]
+        enabled = CONFIG["commands"]["hug"]["enabled"],
+        aliases = ["stab"]
     )
     async def hug(self, ctx, target):
         """
