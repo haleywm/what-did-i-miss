@@ -348,7 +348,7 @@ class WordCloud(object):
                  include_numbers=False, min_word_length=0, collocation_threshold=30,
                  tint_emoji = True, rotate_emoji = True, emoji_cache_path = "./cache/",
                  emoji_regex = re.compile(r"<:[\w]+:(\d+)>"), font_size_mod = 1.0,
-                 outline_thickness = 0, outline_color = "black"): #modified
+                 outline_thickness = 0): #modified
         if font_path is None:
             font_path = FONT_PATH
         if color_func is None and colormap is None:
@@ -409,10 +409,9 @@ class WordCloud(object):
         self.emoji_regex = emoji_regex #modified
         self.font_size_mod = font_size_mod #modified
         self.outline_thickness = outline_thickness #modified
-        self.outline_color = outline_color #modified
-        self.outline_mult = 0.03
-        self.outline_offset = 0.2
-        self.outline_sensitivity = 0.7
+        self.outline_mult = 0.03 #modified
+        self.outline_offset = 0.2 #modified
+        self.outline_sensitivity = 0.7 #modified
 
     def fit_words(self, frequencies):
         """Create a word_cloud from words and frequencies.
@@ -813,9 +812,7 @@ class WordCloud(object):
                 font, orientation=orientation)
             pos = (int(position[1] * self.scale),
                    int(position[0] * self.scale))
-            outline = self.outline_color
-            if(font_size > 30):
-                outline = self.get_outline(color)
+            outline = self.get_outline(color)
             outline_size = max(int(font_size * self.scale * self.outline_mult), 1)
             draw.text(pos, word, fill=color, font=transposed_font, stroke_width=outline_size, stroke_fill=outline)
         return self._draw_contour(img=img)

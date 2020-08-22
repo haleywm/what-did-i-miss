@@ -120,7 +120,6 @@ def create_wordcloud(words):
         background_color = CONFIG["commands"]["whatdidimiss"]["background-colour"],
         mode = "RGBA",
         outline_thickness = CONFIG["commands"]["whatdidimiss"]["outline-thickness"],
-        outline_color = CONFIG["commands"]["whatdidimiss"]["outline-colour"],
         font_path = CONFIG["commands"]["whatdidimiss"]["fontpath"],
         tint_emoji = CONFIG["commands"]["whatdidimiss"]["tint"],
         emoji_cache_path = CONFIG["commands"]["whatdidimiss"]["cache"],

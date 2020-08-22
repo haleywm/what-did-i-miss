@@ -40,7 +40,6 @@ commands:
     # https://pillow.readthedocs.io/en/stable/reference/ImageColor.html#color-names
     # ~ means transparent
     background-colour: ~
-    outline-colour: "grey"
     # Thickness in pixels
     outline-thickness: 4
   stop:
