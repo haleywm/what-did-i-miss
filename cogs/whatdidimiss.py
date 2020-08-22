@@ -47,7 +47,7 @@ Examples:
 
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
-                raise UserError("Thats too much time! 7d Maximum!", True)
+                raise UserError(f'Thats too much time! {CONFIG["commands"]["whatdidimiss"]["maxtime"]} Maximum!', True)
 
             one_channel = utils.parse_bool(one_channel)
             case_insensitive = utils.parse_bool(case_insensitive)
