@@ -1,8 +1,8 @@
 from sqlalchemy import Column, Integer, String
 from services.database.base import Base
 
-class Server(Base):
-    __tablename__ = 'servers'
+class Disabled_Commands(Base):
+    __tablename__ = 'disabled_commands'
 
     # The server ID
     server_id = Column(Integer, primary_key=True, autoincrement=False)

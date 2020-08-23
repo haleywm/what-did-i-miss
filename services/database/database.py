@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from services.database.base import Base
-from services.database.tables.server import Server
+from services.database.tables.disabled_commands import Disabled_Commands
 
 # Connecting to the database
 engine = create_engine("sqlite://server_variables.db")
@@ -15,7 +15,7 @@ Session.configure(bind=engine)
 def get_server(server_id):
     "Lookup a server with the given ID and return it. Returns None if server doesn't exist."
     session = Session()
-    server = session.query(Server).filter(Server.server_id == server_id).first()
+    server = session.query(Disabled_Commands).filter(Disabled_Commands.server_id == server_id).first()
     session.close()
     return server
 
@@ -29,14 +29,14 @@ def set_server(server_id, newvals):
         The id of the server being set.
     newvals (dict)
         The new values that should be set, in key: value format.
-        Values that aren't part of the Server class are discarded.
+        Values that aren't part of the Disabled_Commands class are discarded.
     """
     # Create a new session, check if an item already exists, and either update the server or create a new entry
     session = Session()
-    server = session.query(Server).filter(Server.server_id == server_id).first()
+    server = session.query(Disabled_Commands).filter(Disabled_Commands.server_id == server_id).first()
     # server is None is doesn't exist
     if not server:
-        server = Server(server_id = server_id)
+        server = Disabled_Commands(server_id = server_id)
         session.add(server)
     
     for key, value in newvals.items():
