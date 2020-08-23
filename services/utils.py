@@ -1,6 +1,7 @@
 import discord, re, datetime
 from math import floor
 from services.config import CONFIG
+import discord.ext.commands as commands
 
 class UserError(Exception):
     def __init__(self, message="Invalid Input", no_cooldown=False):
@@ -201,10 +202,11 @@ def add_dict(freq_dict, word):
     else:
         freq_dict[word] = 1
 
-def check_perms(ctx, perms):
-    """Checks if the discord bot has all the required permissions in the given channel.
-    Returns true if the bot has all permissions required,
+def check_perms(ctx, perms, user = None):
+    """Checks if a user has all the required permissions in the given channel.
+    Returns true if the user has all permissions required,
     or if the context takes place within DM's where permissions don't apply.
+    The default user is the bot.
     Parameters
     ----------
     ctx : discord.ext.commands.Context
@@ -213,6 +215,10 @@ def check_perms(ctx, perms):
     perms : discord.Permissions
         The set of permissions that the bot requires.
         Only values explicitly defined are checked.
+    user : discord.Member, discord.ClientUser
+        The user for which to evaluate permissions. If user is a client user, then this implies context is in DM's, and command will return true
     """
-    # Checks that all permissions are present in context's channel, if the channel is part of a guild (server)
-    return type(ctx.me) is not discord.Member or ctx.channel.permissions_for(ctx.me).is_superset(perms)
+    if not user:
+        user = ctx.me
+    # Checks that all permissions are present in context's channel, if the given user
+    return (not isinstance(user, discord.Member)) or ctx.channel.permissions_for(user).is_superset(perms)

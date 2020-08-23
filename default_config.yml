@@ -45,3 +45,5 @@ commands:
     outline-thickness: 4
   stop:
     enabled: True
+  admin:
+    enabled: True

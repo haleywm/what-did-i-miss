@@ -5,7 +5,8 @@ import discord
 from services.config import CONFIG
 from discord.ext import commands
 # This line only imports the modules defined in modules/__init__.py, which should only be cogs
-from cogs import whatdidimiss, stop, misc
+from cogs import whatdidimiss, stop, misc, admin
+from services.checks import server_allowed_check
 
 
 bot = commands.Bot(
@@ -21,9 +22,12 @@ async def on_ready():
 
 if __name__ == "__main__":
     # Add lines here to register additional "cogs", which are modular code sections that add commands
-    bot.add_cog(whatdidimiss.Whatdidimiss(bot))
-    bot.add_cog(stop.Stop(bot))
+    bot.add_cog(whatdidimiss.Whatdidimiss())
+    bot.add_cog(stop.Stop())
     bot.add_cog(misc.Wholesome())
+    bot.add_cog(admin.Admin())
+
+    bot.add_check(server_allowed_check)
 
     try:
         bot.run(CONFIG["key"])

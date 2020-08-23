@@ -4,6 +4,7 @@ import discord.ext.commands as commands
 import concurrent.futures, asyncio, datetime
 import discord
 from io import BytesIO
+from services.checks import check_handler_shoveoff
 
 from services.config import CONFIG
 
@@ -12,9 +13,6 @@ class Whatdidimiss(commands.Cog, name="Wordclouds"):
     r"""Class for defining a word cloud generator command for Discord.py
     Does not take input apart from what is defined by the spec for adding cogs.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self._last_member = None
     
     @commands.command(
         name = "wordcloud",
@@ -33,6 +31,7 @@ Examples:
         """,
         enabled = CONFIG["commands"]["whatdidimiss"]["enabled"]
     )
+    @commands.guild_only()
     async def wordcloud(self, ctx,
         in_time = CONFIG["commands"]["whatdidimiss"]["defaulttime"],
         one_channel = "True",
@@ -74,6 +73,7 @@ Examples:
         aliases = ["wdim"],
         description = "Generates a wordcloud of messages posted in the channelsince the last message from the user"
     )
+    @commands.guild_only()
     async def whatdidimiss(self, ctx):
         try:
             # Checking cooldown:
@@ -100,6 +100,9 @@ Examples:
             cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
         except UserError as e:
             await ctx.send(f"Invalid input: {e.message}")
+    
+    cog_command_error = check_handler_shoveoff
+
 
 def create_wordcloud(words):
     r"""Creates a wordcloud given a frequency dictionary, saves it to filename.

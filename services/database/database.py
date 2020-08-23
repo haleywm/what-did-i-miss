@@ -4,7 +4,7 @@ from services.database.base import Base
 from services.database.tables.disabled_commands import Disabled_Commands
 
 # Connecting to the database
-engine = create_engine("sqlite://server_variables.db")
+engine = create_engine("sqlite:///server_variables.db")
 # The server module registered itself with base when imported, creating missing db structures:
 # TODO: Support for migration using sqlalchemy alembic. Not neccessary until I want to modify table structure in an update
 Base.metadata.create_all(engine)
