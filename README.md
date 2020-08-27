@@ -8,7 +8,7 @@ The setup of the bot is relatively simple. First, you must setup a discord bot (
 
 Next, clone this repo and extract it and whatever, and create a file called `config.yml` containing `key: {bot-private-key}`. Read `default-config.yml` to get additional configuration options, and place these in your `config.yml` file to overwrite these values. **DO NOT MODIFY default-config.yml**.
 
-Next, you must have installed Python 3.8, as well as pip, and gcc. Install the package dependencies with `python -m pip install --update pip && pip install -r requirements.txt`.
+Next, you must have installed Python 3.7, as well as pip, and gcc. Install the package dependencies with `python -m pip install --update pip && pip install -r requirements.txt`.
 
 Lastly, the application can be run with `python main.py`.
 
@@ -31,7 +31,7 @@ This is a bot that generates wordclouds based on messages that have been posted 
 
 ## Dependencies
 
-- `Python 3.8`
+- `Python 3.7`
 - `pip`
 - `libyaml-dev`
     - Not strictly necessary, but improves yaml parse speed and security
