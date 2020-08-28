@@ -51,3 +51,5 @@ commands:
     # If the bot should delete the .hug command that called it
     delete-message: False
     fuzzy-matching: False
+  gator:
+    enabled: True

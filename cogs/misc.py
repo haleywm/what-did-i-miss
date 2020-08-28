@@ -5,6 +5,7 @@ from discord.ext import commands
 from services.cat.api import get_cat_image
 from services.config import CONFIG
 from services.hug.utils import remove_invocation, find_user, InvalidUserException
+from services.imgur.imgur import get_image_from_album
 
 
 # TODO Implement error handling for cat commands
@@ -40,7 +41,8 @@ class Wholesome(commands.Cog):
 
     @commands.before_invoke(remove_invocation)
     @commands.command(
-        enabled = CONFIG["commands"]["hug"]["enabled"]
+        enabled = CONFIG["commands"]["hug"]["enabled"],
+        aliases = ["stab"]
     )
     async def hug(self, ctx, target):
         """
@@ -56,3 +58,12 @@ class Wholesome(commands.Cog):
             await ctx.send(f'User not found. Check that the user is valid.```{ctx.message.content}```')
         except Exception as e:
             raise e
+    
+    @commands.command(
+        enabled = CONFIG["commands"]["gator"]["enabled"],
+        aliases = ["alligator"]
+    )
+    async def gator(self, ctx):
+        "Post a gator pick, from an album provided by Gator#3220"
+        url = await get_image_from_album("cwnBW9Q")
+        await ctx.send(url)
