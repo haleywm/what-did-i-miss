@@ -46,10 +46,15 @@ commands:
     enabled: True
   cat:
     enabled: True
+  dog:
+    enabled: True
+  gator:
+    enabled: True
+  images:
+    # Link api images instead of downloading first
+    link: True
   hug:
     enabled: True
     # If the bot should delete the .hug command that called it
     delete-message: False
     fuzzy-matching: False
-  gator:
-    enabled: True
