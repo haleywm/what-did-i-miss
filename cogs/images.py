@@ -6,6 +6,12 @@ from discord.ext import commands
 from services.api.all import *
 from services.config import CONFIG
 
+async def imgur_send(ctx, album_hash):
+    download = not CONFIG["commands"]["images"]["link"]
+    async with ctx.typing():
+        gator = await get_image_from_album(album_hash, download)
+        await send(ctx, gator, download)
+
 async def send(ctx, f, download):
     if(download):
         await ctx.send(file=f)
@@ -50,13 +56,17 @@ class Cat(commands.Cog):
         await self.cat(ctx, True)
 
 class Gator(commands.Cog):
-    @commands.command(
+    @bot.group(
+        invoke_without_command=True,
         enabled = CONFIG["commands"]["gator"]["enabled"],
         aliases = ["alligator"]
     )
     async def gator(self, ctx):
         "Post a gator pick, from an album provided by Gator#3220"
-        download = not CONFIG["commands"]["images"]["link"]
-        async with ctx.typing():
-            gator = await get_image_from_album("cwnBW9Q", download)
-            await send(ctx, gator, download)
+        await imgur_send(ctx, "cwnBW9Q")
+
+    @gator.command(
+        enabled = CONFIG["commands"]["gator"]["enabled"]
+    )
+    async def gif(self, ctx):
+        await imgur_send(ctx, "lSQtPms")
