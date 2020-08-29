@@ -616,7 +616,7 @@ class WordCloud(object):
                 mask = mask.resize((int(box_size[0]), int(box_size[1])), Image.NEAREST)
                 img_grey.paste(mask, (y, x), mask)
             else:
-                draw.text((y, x), word, fill="white", font=transposed_font, stroke_width=int(font_size * mult * self.scale * self.outline_mult))
+                draw.text((y, x), word, fill="white", font=transposed_font, stroke_width=int(font_size * mult * self.outline_mult))
             positions.append((x, y))
             orientations.append(orientation)
             font_sizes.append(int(font_size*mult))
@@ -813,7 +813,7 @@ class WordCloud(object):
             pos = (int(position[1] * self.scale),
                    int(position[0] * self.scale))
             outline = self.get_outline(color)
-            outline_size = max(int(font_size * self.scale * self.outline_mult), 1)
+            outline_size = int(font_size * self.scale * self.outline_mult)
             draw.text(pos, word, fill=color, font=transposed_font, stroke_width=outline_size, stroke_fill=outline)
         return self._draw_contour(img=img)
 
