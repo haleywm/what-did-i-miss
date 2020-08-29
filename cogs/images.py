@@ -52,7 +52,7 @@ class Cat(commands.Cog):
 class Gator(commands.Cog):
     @commands.command(
         enabled = CONFIG["commands"]["gator"]["enabled"],
-        aliases = ["alligator", "croc"]
+        aliases = ["croc"]
     )
     async def gator(self, ctx):
         "Post a gator pick, from an album provided by Gator#3220"
