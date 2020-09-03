@@ -1,7 +1,5 @@
 import discord
 
-from main import bot
-
 from discord.ext import commands
 from services.api.all import *
 from services.config import CONFIG
@@ -19,7 +17,7 @@ async def send(ctx, f, download):
         await ctx.send(f)
 
 class Dog(commands.Cog):
-    @bot.group(
+    @commands.group(
         invoke_without_command=True,
         enabled = CONFIG["commands"]["dog"]["enabled"]
     )
@@ -38,7 +36,7 @@ class Dog(commands.Cog):
         await self.dog(ctx, True)
 
 class Cat(commands.Cog):
-    @bot.group(
+    @commands.group(
         invoke_without_command=True,
         enabled = CONFIG["commands"]["cat"]["enabled"]
     )
@@ -56,7 +54,7 @@ class Cat(commands.Cog):
         await self.cat(ctx, True)
 
 class Gator(commands.Cog):
-    @bot.group(
+    @commands.group(
         invoke_without_command=True,
         enabled = CONFIG["commands"]["gator"]["enabled"],
         aliases = ["alligator"]

@@ -49,3 +49,13 @@ def set_setting(server_id, setting_values):
     
     # Commiting the session saves the changes. As has already been added to session, it has been keeping track of changes for us.
     session.commit()
+
+def delete_setting(server_id, setting_key):
+    "Deletes the given key if it exists. Does nothing if the value doesn't exist."
+    session = Session()
+
+    item = session.query(Server_Options).filter(Server_Options.server_id == server_id).\
+        filter(Server_Options.setting_key == setting_key).first()
+    
+    session.delete(item)
+    session.commit()

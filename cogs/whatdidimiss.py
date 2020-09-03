@@ -13,9 +13,6 @@ class Whatdidimiss(commands.Cog, name="Wordclouds"):
     r"""Class for defining a word cloud generator command for Discord.py
     Does not take input apart from what is defined by the spec for adding cogs.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self._last_member = None
     
     @commands.command(
         name = "wordcloud",

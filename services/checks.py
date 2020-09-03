@@ -21,14 +21,19 @@ def server_allowed_check(ctx):
     If so, that the message is either in the bot channel, or is allowed in the server config.
     Doesn't return a predicate so that it can be run bot wide."""
     allowed = True
+    channel = get_setting(ctx.guild.id, "bot_channel")
+
+    # If a command is made bot only and no bot channel exists, that command will just be disabled
+    #if ctx.guild and channel is not None:
     if ctx.guild:
-        allowed = get_setting(ctx.guild.id, f"bot-{ctx.command.name}") != '0'
+        # If the command can be used anywhere, or if it's in the bot channel, allow it
+        allowed = get_setting(ctx.guild.id, f"bc_only_{ctx.command.name}") != '0' or channel == ctx.channel.name
     return allowed
 
 async def global_command_handler(ctx, error):
     # Ignores errors that can fail silently, like failed checks, and invalid arguments
     # Raises them otherwise
-    if not isinstance(error, (commands.BadArgument, commands.CheckFailure)):
+    if not isinstance(error, (commands.BadArgument, commands.CheckFailure, commands.MissingRequiredArgument, commands.CommandNotFound)):
         raise error
 
 # Check handler
