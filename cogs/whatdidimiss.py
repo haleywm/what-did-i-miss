@@ -34,6 +34,7 @@ Examples:
         """,
         enabled = CONFIG["commands"]["whatdidimiss"]["enabled"]
     )
+    @commands.guild_only()
     async def wordcloud(self, ctx,
         in_time = CONFIG["commands"]["whatdidimiss"]["defaulttime"],
         one_channel: bool = True,
@@ -46,6 +47,7 @@ Examples:
         aliases = ["wdim"],
         description = "Generates a wordcloud of messages posted in the channelsince the last message from the user"
     )
+    @commands.guild_only()
     async def whatdidimiss(self, ctx):
         await self.find_wordcloud(
             ctx, CONFIG["commands"]["whatdidimiss"]["max-lookback-time"], stop_after_usermsg=True

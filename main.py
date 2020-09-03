@@ -3,6 +3,7 @@
 import sys, os
 import discord
 from services.config import CONFIG
+from services.checks import server_allowed_check, global_command_handler
 from discord.ext import commands
 
 bot = commands.Bot(
@@ -11,6 +12,8 @@ bot = commands.Bot(
 )
 #import after to prevent circular imports
 from cogs import whatdidimiss, stop, misc, images
+
+bot.on_command_error = global_command_handler
 
 @bot.event
 async def on_ready():
@@ -25,6 +28,8 @@ if __name__ == "__main__":
     bot.add_cog(images.Dog())
     bot.add_cog(images.Gator())
     bot.add_cog(misc.Hug())
+    bot.add_check(server_allowed_check)
+
     try:
         bot.run(CONFIG["key"])
     except discord.LoginFailure:
