@@ -47,6 +47,7 @@ def parse_seconds_to_time(raw_seconds, show_seconds=False):
     show_seconds : bool, default=False
         If seconds should be displayed
     """
+    units = [(86400, "day", True), (3600, "hour", True), (60, "minute", True), (1, "second", show_seconds)]
     output = ""
     time_added = False
     if raw_seconds < 0:
@@ -55,53 +56,23 @@ def parse_seconds_to_time(raw_seconds, show_seconds=False):
     elif raw_seconds < 1:
         return "No time"
     
-    if raw_seconds > 86400:
-        time_added = True
-        unit = floor(raw_seconds / 86400)
-        output += str(unit) + " day"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
-        raw_seconds %= 86400
-    if raw_seconds > 3600:
-        time_added = True
-        unit = floor(raw_seconds / 3600)
-        output += str(unit) + " hour"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
-        raw_seconds %= 3600
-    if raw_seconds > 60:
-        time_added = True
-        unit = floor(raw_seconds / 60)
-        output += str(unit) + " minute"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
-        raw_seconds %= 60
-    if show_seconds or not time_added:
-        unit = round(raw_seconds)
-        output += str(unit) + " second"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
+    for unit in units:
+        # Units with a [2] value of false won't be shown unless no time has been added by other values yet
+        if raw_seconds > unit[0] and (unit[2] or not time_added):
+            # Setting 
+            time_added = True
+            amount = floor(raw_seconds / unit[0])
+            output += str(amount) + " " + unit[1]
+            if amount > 1:
+                output += "s, "
+            else:
+                output += ", "
+            raw_seconds %= unit[0]
     return output[:-2]
 
-def parse_bool(in_bool):
-    r"""Parses a string to decide if it is true or false.
-    Defaults to true unless input matches "false", "0", "no".
-    Case insensitive.
-    Parameters
-    ----------
-    in_bool : string
-        The string to be parsed to see if it is true or false.
-    """
-    falseValues = ("false", "0", "no")
-    return in_bool.lower() not in falseValues
+def prettify_time(raw_time):
+    "Converts a time to a full string by first converting it to seconds, and then to human readable time"
+    return parse_seconds_to_time(parse_time_to_seconds(raw_time))
 
 async def collect_messages(
     ctx, one_channel, timestamp, stopwords, case_insensitive = True, until_last_user_msg = False

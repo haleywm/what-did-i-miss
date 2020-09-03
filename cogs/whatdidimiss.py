@@ -36,8 +36,8 @@ Examples:
     )
     async def wordcloud(self, ctx,
         in_time = CONFIG["commands"]["whatdidimiss"]["defaulttime"],
-        one_channel = "True",
-        case_insensitive = "True"
+        one_channel: bool = True,
+        case_insensitive: bool = True
         ):
         try:
             await self.check_cooldown(ctx)
@@ -48,9 +48,7 @@ Examples:
             seconds = utils.parse_time_to_seconds(in_time)
             if  seconds > utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
                 raise UserError(f'Thats too much time! {CONFIG["commands"]["whatdidimiss"]["maxtime"]} Maximum!', True)
-
-            one_channel = utils.parse_bool(one_channel)
-            case_insensitive = utils.parse_bool(case_insensitive)
+            
             # Getting the earliest time that should be used
             timestamp = datetime.datetime.utcnow() - datetime.timedelta(seconds=seconds)
 
