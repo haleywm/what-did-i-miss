@@ -104,13 +104,14 @@ async def collect_messages(
             lambda i:type(i) is discord.TextChannel and i.permissions_for(ctx.me).read_messages,
             ctx.guild.channels))]
     words = dict()
+    msg_amount = 0
     time_now = datetime.datetime.utcnow()
     # Default time_back of 0
     # This will be set to a larger value only if until_last_user_msg is True
     time_back = datetime.timedelta()
     for hist in histories:
         async for msg in hist(limit=None, after=timestamp, oldest_first=False):
-            if msg.author is not ctx.me:
+            if msg.author is not ctx.me and not msg.content.startswith("."):
                 # Since I can't tell when the last message will be this is calculator for every
                 # message. Efficient.
                 # If only looking until the users last message, stop looking if they're the author
@@ -126,10 +127,12 @@ async def collect_messages(
                 else:
                     # clean_content parses @'s and #'s to be readable names, while content doesn't.
                     add_frequency(words, msg.clean_content, stopwords, case_insensitive)
+                    msg_amount += 1
+                    
     if until_last_user_msg:
-        return (words, time_back)
+        return (words, msg_amount, time_back)
     else:
-        return words
+        return (words, msg_amount)
 
 def add_frequency(freq_dict, text, stopwords, case_insensitive):
     r"""Adds the frequency of words inside the given string to a dict.
@@ -150,18 +153,17 @@ def add_frequency(freq_dict, text, stopwords, case_insensitive):
     MAXLEN = 20
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
-    if not text.startswith("."):
-        for word in text.split():
-            if case_insensitive:
-                word = word.lower()
-            word = word.strip(CONFIG["commands"]["whatdidimiss"]["strip"])
-            # Testing if the word is emojis
-            emojis = parseEmojis.findall(word)
-            if len(emojis) > 0:
-                for emoji in emojis:
-                    add_dict(freq_dict, emoji)
-            elif word not in stopwords and len(word) <= MAXLEN:
-                add_dict(freq_dict, word)
+    for word in text.split():
+        if case_insensitive:
+            word = word.lower()
+        word = word.strip(CONFIG["commands"]["whatdidimiss"]["strip"])
+        # Testing if the word is emojis
+        emojis = parseEmojis.findall(word)
+        if len(emojis) > 0:
+            for emoji in emojis:
+                add_dict(freq_dict, emoji)
+        elif word not in stopwords and len(word) <= MAXLEN:
+            add_dict(freq_dict, word)
 
 def add_dict(freq_dict, word):
     """Adds to a frequency dictionary

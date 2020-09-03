@@ -75,20 +75,21 @@ Examples:
                 result = await utils.collect_messages(
                     ctx, one_channel, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], case_insensitive, stop_after_usermsg
                 )
+                # Depending on if stop_after_usermsg is set, it'll either just return the frequency dict, or a tuple with more information
+                words = result[0]
+                msg_count = result[1]
                 if stop_after_usermsg:
-                    words = result[0]
-                    if result[1].total_seconds() == 0:
+                    if result[2].total_seconds() == 0:
                         time_diff = f'Hit max time of {CONFIG["commands"]["whatdidimiss"]["max-lookback-time"]}'
                     else:
-                        time_diff = utils.parse_seconds_to_time(int(result[1].total_seconds()))
-                else:
-                    words = result
+                        time_diff = utils.parse_seconds_to_time(int(result[2].total_seconds()))
+                
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
                     if stop_after_usermsg:
-                        await ctx.send(f"Heres what happened since your last post: ({time_diff} ago)", file=discord.File(fp=image, filename="wordcloud.png"))
+                        await ctx.send(f"Heres what happened since your last post {time_diff} ago ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
                     else:
-                        await ctx.send(f"Heres what happened in the past: {utils.prettify_time(in_time)}", file=discord.File(fp=image, filename="wordcloud.png"))
+                        await ctx.send(f"Heres what happened in the past {utils.prettify_time(in_time)} ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
         except UserError as e:
             await ctx.send(f":warning:  {e.message}")
             # Removing the cooldown as an act of mercy
