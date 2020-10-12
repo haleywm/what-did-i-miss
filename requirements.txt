@@ -8,3 +8,4 @@ fontTools==4.14.0
 Pillow==7.2.0
 PyYAML==5.3.1
 secrets==1.0.2
+wordcloud==1.8.0
