@@ -35,6 +35,8 @@ This is a bot that generates wordclouds based on messages that have been posted 
 - `pip`
 - `libyaml-dev`
     - Not strictly necessary, but improves yaml parse speed and security
+- `libldap2-dev`
+- `libsasl2-dev`
 
 ## Planned Features
 
