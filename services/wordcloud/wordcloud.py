@@ -31,7 +31,7 @@ from PIL import ImageFilter
 from PIL import ImageFont
 from PIL import ImageChops #modified
 
-from .query_integral_image import query_integral_image
+from wordcloud.query_integral_image import query_integral_image
 from .tokenization import unigrams_and_bigrams, process_tokens
 
 FILE = os.path.dirname(__file__)

@@ -55,6 +55,3 @@ commands:
     link: True
   hug:
     enabled: True
-    # If the bot should delete the .hug command that called it
-    delete-message: False
-    fuzzy-matching: False

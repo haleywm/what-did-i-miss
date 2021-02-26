@@ -1,10 +1,14 @@
 import discord
 
-from main import bot
-
 from discord.ext import commands
 from services.api.all import *
 from services.config import CONFIG
+
+async def imgur_send(ctx, album_hash):
+    download = not CONFIG["commands"]["images"]["link"]
+    async with ctx.typing():
+        gator = await get_image_from_album(album_hash, download)
+        await send(ctx, gator, download)
 
 async def send(ctx, f, download):
     if(download):
@@ -13,7 +17,7 @@ async def send(ctx, f, download):
         await ctx.send(f)
 
 class Dog(commands.Cog):
-    @bot.group(
+    @commands.group(
         invoke_without_command=True,
         enabled = CONFIG["commands"]["dog"]["enabled"]
     )
@@ -32,7 +36,7 @@ class Dog(commands.Cog):
         await self.dog(ctx, True)
 
 class Cat(commands.Cog):
-    @bot.group(
+    @commands.group(
         invoke_without_command=True,
         enabled = CONFIG["commands"]["cat"]["enabled"]
     )
@@ -50,13 +54,17 @@ class Cat(commands.Cog):
         await self.cat(ctx, True)
 
 class Gator(commands.Cog):
-    @commands.command(
+    @commands.group(
+        invoke_without_command=True,
         enabled = CONFIG["commands"]["gator"]["enabled"],
-        aliases = ["alligator", "croc"]
+        aliases = ["alligator"]
     )
     async def gator(self, ctx):
         "Post a gator pick, from an album provided by Gator#3220"
-        download = not CONFIG["commands"]["images"]["link"]
-        async with ctx.typing():
-            gator = await get_image_from_album("cwnBW9Q", download)
-            await send(ctx, gator, download)
+        await imgur_send(ctx, "cwnBW9Q")
+
+    @gator.command(
+        enabled = CONFIG["commands"]["gator"]["enabled"]
+    )
+    async def gif(self, ctx):
+        await imgur_send(ctx, "lSQtPms")

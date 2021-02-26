@@ -13,9 +13,6 @@ class Whatdidimiss(commands.Cog, name="Wordclouds"):
     r"""Class for defining a word cloud generator command for Discord.py
     Does not take input apart from what is defined by the spec for adding cogs.
     """
-    def __init__(self, bot):
-        self.bot = bot
-        self._last_member = None
     
     @commands.command(
         name = "wordcloud",
@@ -34,67 +31,70 @@ Examples:
         """,
         enabled = CONFIG["commands"]["whatdidimiss"]["enabled"]
     )
+    @commands.guild_only()
     async def wordcloud(self, ctx,
         in_time = CONFIG["commands"]["whatdidimiss"]["defaulttime"],
-        one_channel = "True",
-        case_insensitive = "True"
-        ):
-        try:
-            await self.check_cooldown(ctx)
-            
-            # Checking for appropriate permissions
-            check_cmd_perms(ctx)
-
-            seconds = utils.parse_time_to_seconds(in_time)
-            if  seconds > utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
-                raise UserError(f'Thats too much time! {CONFIG["commands"]["whatdidimiss"]["maxtime"]} Maximum!', True)
-
-            one_channel = utils.parse_bool(one_channel)
-            case_insensitive = utils.parse_bool(case_insensitive)
-            # Getting the earliest time that should be used
-            timestamp = datetime.datetime.utcnow() - datetime.timedelta(seconds=seconds)
-
-            # And now for the slow stuff
-            with ctx.typing():
-                # Next, recursively grabbing messages and appending them to a long ass string
-                words = await utils.collect_messages(ctx, one_channel, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], case_insensitive)
-                with concurrent.futures.ProcessPoolExecutor() as pool:
-                    image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
-                    await ctx.send(f"Heres what happened in the past: {in_time}", file=discord.File(fp=image, filename="wordcloud.png"))
-        except UserError as e:
-            await ctx.send(f":warning:  {e.message}")
-            # Removing the cooldown as an act of mercy
-            if e.no_cooldown:
-                cooldown.remove_cooldown(ctx)
+        one_channel: bool = True,
+        case_insensitive: bool = True
+    ):
+        await self.find_wordcloud(ctx, in_time, one_channel, case_insensitive)
 
     @commands.command(
         name = "whatdidimiss",
         aliases = ["wdim"],
         description = "Generates a wordcloud of messages posted in the channelsince the last message from the user"
     )
+    @commands.guild_only()
     async def whatdidimiss(self, ctx):
+        await self.find_wordcloud(
+            ctx, CONFIG["commands"]["whatdidimiss"]["max-lookback-time"], stop_after_usermsg=True
+        )
+
+    async def find_wordcloud(self, ctx, in_time, one_channel=True, case_insensitive=True, stop_after_usermsg=False):
         try:
             await self.check_cooldown(ctx)
             
-            # Checking for appropriate permissions
-            check_cmd_perms(ctx)
+            if not utils.check_perms(ctx, discord.Permissions(
+                read_message_history = True,
+                attach_files = True,
+                send_messages = True
+            )):
+                raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.", True)
 
-            timestamp = datetime.datetime.utcnow() - datetime.timedelta(
-                seconds = utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["max-lookback-time"])
-            )
+            seconds = utils.parse_time_to_seconds(in_time)
+            if  seconds > utils.parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["maxtime"]) or seconds < 1:
+                raise UserError(f'Thats too much time! {CONFIG["commands"]["whatdidimiss"]["maxtime"]} Maximum!', True)
+            
+            # Getting the earliest time that should be used
+            timestamp = datetime.datetime.utcnow() - datetime.timedelta(seconds=seconds)
 
+            # And now for the slow stuff
             with ctx.typing():
-                (words, msg_time) = await utils.collect_messages(ctx, True, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], True, True)
+                # Next, recursively grabbing messages and appending them to a long ass string
+                result = await utils.collect_messages(
+                    ctx, one_channel, timestamp, CONFIG["commands"]["whatdidimiss"]["stopwords"], case_insensitive, stop_after_usermsg
+                )
+                # Depending on if stop_after_usermsg is set, it'll either just return the frequency dict, or a tuple with more information
+                words = result[0]
+                msg_count = result[1]
+                if stop_after_usermsg:
+                    if result[2].total_seconds() == 0:
+                        time_diff = f'Hit max time of {CONFIG["commands"]["whatdidimiss"]["max-lookback-time"]}'
+                    else:
+                        time_diff = utils.parse_seconds_to_time(int(result[2].total_seconds()))
+                
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
-                if msg_time.total_seconds() == 0:
-                    time_diff = f'Hit max time of {CONFIG["commands"]["whatdidimiss"]["max-lookback-time"]}'
-                else:
-                    time_diff = utils.parse_seconds_to_time(int(msg_time.total_seconds()))
-                await ctx.send(f"Heres what happened since your last post: ({time_diff} ago)", file=discord.File(fp=image, filename="wordcloud.png"))
-            cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
+                    if stop_after_usermsg:
+                        await ctx.send(f"Heres what happened since your last post {time_diff} ago ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
+                    else:
+                        await ctx.send(f"Heres what happened in the past {utils.prettify_time(in_time)} ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
         except UserError as e:
             await ctx.send(f":warning:  {e.message}")
+            # Removing the cooldown as an act of mercy
+            if e.no_cooldown:
+                cooldown.remove_cooldown(ctx)
+
     async def check_cooldown(self, ctx):
         c, t = cooldown.cooldown_in_effect(ctx)
         if c:
@@ -103,6 +103,7 @@ Examples:
         cooldown.add_cooldown(ctx, CONFIG["commands"]["whatdidimiss"]["cooldown"])
 
 
+# I would put this inside the object but causes issues with how making pools works
 def create_wordcloud(words):
     r"""Creates a wordcloud given a frequency dictionary, saves it to filename.
     Parameters
@@ -134,13 +135,3 @@ def create_wordcloud(words):
     else:
         raise UserError("I need words for a wordcloud!", True)
     return file
-
-def check_cmd_perms(ctx):
-    # Checking for appropriate permissions
-    # Only check if the bot type is a member of a server
-    if not utils.check_perms(ctx, discord.Permissions(
-        read_message_history = True,
-        attach_files = True,
-        send_messages = True
-    )):
-        raise UserError("`read_message_history`, `attach_files`, and `send_messages` permissions required.", True)

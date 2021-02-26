@@ -47,6 +47,7 @@ def parse_seconds_to_time(raw_seconds, show_seconds=False):
     show_seconds : bool, default=False
         If seconds should be displayed
     """
+    units = [(86400, "day", True), (3600, "hour", True), (60, "minute", True), (1, "second", show_seconds)]
     output = ""
     time_added = False
     if raw_seconds < 0:
@@ -55,53 +56,23 @@ def parse_seconds_to_time(raw_seconds, show_seconds=False):
     elif raw_seconds < 1:
         return "No time"
     
-    if raw_seconds > 86400:
-        time_added = True
-        unit = floor(raw_seconds / 86400)
-        output += str(unit) + " day"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
-        raw_seconds %= 86400
-    if raw_seconds > 3600:
-        time_added = True
-        unit = floor(raw_seconds / 3600)
-        output += str(unit) + " hour"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
-        raw_seconds %= 3600
-    if raw_seconds > 60:
-        time_added = True
-        unit = floor(raw_seconds / 60)
-        output += str(unit) + " minute"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
-        raw_seconds %= 60
-    if show_seconds or not time_added:
-        unit = round(raw_seconds)
-        output += str(unit) + " second"
-        if unit > 1:
-            output += "s, "
-        else:
-            output += ", "
+    for unit in units:
+        # Units with a [2] value of false won't be shown unless no time has been added by other values yet
+        if raw_seconds > unit[0] and (unit[2] or not time_added):
+            # Setting 
+            time_added = True
+            amount = floor(raw_seconds / unit[0])
+            output += str(amount) + " " + unit[1]
+            if amount > 1:
+                output += "s, "
+            else:
+                output += ", "
+            raw_seconds %= unit[0]
     return output[:-2]
 
-def parse_bool(in_bool):
-    r"""Parses a string to decide if it is true or false.
-    Defaults to true unless input matches "false", "0", "no".
-    Case insensitive.
-    Parameters
-    ----------
-    in_bool : string
-        The string to be parsed to see if it is true or false.
-    """
-    falseValues = ("false", "0", "no")
-    return in_bool.lower() not in falseValues
+def prettify_time(raw_time):
+    "Converts a time to a full string by first converting it to seconds, and then to human readable time"
+    return parse_seconds_to_time(parse_time_to_seconds(raw_time))
 
 async def collect_messages(
     ctx, one_channel, timestamp, stopwords, case_insensitive = True, until_last_user_msg = False
@@ -133,13 +104,14 @@ async def collect_messages(
             lambda i:type(i) is discord.TextChannel and i.permissions_for(ctx.me).read_messages,
             ctx.guild.channels))]
     words = dict()
+    msg_amount = 0
     time_now = datetime.datetime.utcnow()
     # Default time_back of 0
     # This will be set to a larger value only if until_last_user_msg is True
     time_back = datetime.timedelta()
     for hist in histories:
         async for msg in hist(limit=None, after=timestamp, oldest_first=False):
-            if msg.author is not ctx.me:
+            if msg.author is not ctx.me and not msg.content.startswith("."):
                 # Since I can't tell when the last message will be this is calculator for every
                 # message. Efficient.
                 # If only looking until the users last message, stop looking if they're the author
@@ -155,10 +127,12 @@ async def collect_messages(
                 else:
                     # clean_content parses @'s and #'s to be readable names, while content doesn't.
                     add_frequency(words, msg.clean_content, stopwords, case_insensitive)
+                    msg_amount += 1
+                    
     if until_last_user_msg:
-        return (words, time_back)
+        return (words, msg_amount, time_back)
     else:
-        return words
+        return (words, msg_amount)
 
 def add_frequency(freq_dict, text, stopwords, case_insensitive):
     r"""Adds the frequency of words inside the given string to a dict.
@@ -179,18 +153,17 @@ def add_frequency(freq_dict, text, stopwords, case_insensitive):
     MAXLEN = 20
     # A dictionary of words, each word having an integer value of it's frequency
     # Adds the frequency to an existing set, pass an empty dict() to start with.
-    if not text.startswith("."):
-        for word in text.split():
-            if case_insensitive:
-                word = word.lower()
-            word = word.strip(CONFIG["commands"]["whatdidimiss"]["strip"])
-            # Testing if the word is emojis
-            emojis = parseEmojis.findall(word)
-            if len(emojis) > 0:
-                for emoji in emojis:
-                    add_dict(freq_dict, emoji)
-            elif word not in stopwords and len(word) <= MAXLEN:
-                add_dict(freq_dict, word)
+    for word in text.split():
+        if case_insensitive:
+            word = word.lower()
+        word = word.strip(CONFIG["commands"]["whatdidimiss"]["strip"])
+        # Testing if the word is emojis
+        emojis = parseEmojis.findall(word)
+        if len(emojis) > 0:
+            for emoji in emojis:
+                add_dict(freq_dict, emoji)
+        elif word not in stopwords and len(word) <= MAXLEN:
+            add_dict(freq_dict, word)
 
 def add_dict(freq_dict, word):
     """Adds to a frequency dictionary
@@ -201,10 +174,11 @@ def add_dict(freq_dict, word):
     else:
         freq_dict[word] = 1
 
-def check_perms(ctx, perms):
-    """Checks if the discord bot has all the required permissions in the given channel.
-    Returns true if the bot has all permissions required,
+def check_perms(ctx, perms, user = None):
+    """Checks if a user has all the required permissions in the given channel.
+    Returns true if the user has all permissions required,
     or if the context takes place within DM's where permissions don't apply.
+    The default user is the bot.
     Parameters
     ----------
     ctx : discord.ext.commands.Context
@@ -213,6 +187,10 @@ def check_perms(ctx, perms):
     perms : discord.Permissions
         The set of permissions that the bot requires.
         Only values explicitly defined are checked.
+    user : discord.Member, discord.ClientUser
+        The user for which to evaluate permissions. If user is a client user, then this implies context is in DM's, and command will return true
     """
-    # Checks that all permissions are present in context's channel, if the channel is part of a guild (server)
-    return type(ctx.me) is not discord.Member or ctx.channel.permissions_for(ctx.me).is_superset(perms)
+    if not user:
+        user = ctx.me
+    # Checks that all permissions are present in context's channel, if the given user
+    return (not isinstance(user, discord.Member)) or ctx.channel.permissions_for(user).is_superset(perms)

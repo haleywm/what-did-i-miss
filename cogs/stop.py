@@ -1,5 +1,5 @@
 import discord.ext.commands as commands
-from services.checks import admin_check, check_handler_shoveoff
+from services.checks import bot_admin_check, check_handler_shoveoff
 
 class Stop(commands.Cog, name="Stop"):
     r"""Class for stopping the bot defined by Discord.py
@@ -15,7 +15,7 @@ class Stop(commands.Cog, name="Stop"):
         hidden = True,
         enabled = True
     )
-    @commands.check(admin_check)
+    @commands.check(bot_admin_check)
     async def stop_program(self, ctx):
         print("Closing due to admin command...")
         await ctx.send("Ok bye!!")

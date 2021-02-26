@@ -7,6 +7,8 @@ from random import randrange
 from json import JSONDecodeError
 from services.utils import UserError
 
+__all__ = ["get_dog_image", "get_cat_image", "get_image_from_album"]
+
 async def get_image(name, url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -20,7 +22,7 @@ async def get_json(url, headers_={}):
             try:
                 return await response.json()
             except JSONDecodeError:
-                raise UserError("Got Invalid JSON")
+                raise UserError("Imgur gave a bad response :(")
 
 async def get_dog_image(gif=False, download=True):
     url = "https://api.thedogapi.com/v1/images/search?mime_types="
@@ -29,7 +31,7 @@ async def get_dog_image(gif=False, download=True):
         url = (await get_json(url))[0]["url"]
         return (await get_image("dog", url)) if download else url
     except (KeyError, IndexError):
-        raise UserError("Got an Invalid Response")
+        raise UserError("Dog API gave a bad response :(")
 
 async def get_cat_image(gif=False):
     url = "https://cataas.com/cat" + int(gif)*"/gif"

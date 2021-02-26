@@ -3,6 +3,7 @@
 import sys, os
 import discord
 from services.config import CONFIG
+from services.checks import server_allowed_check, global_command_handler
 from discord.ext import commands
 
 bot = commands.Bot(
@@ -10,7 +11,9 @@ bot = commands.Bot(
     case_insensitive=True
 )
 #import after to prevent circular imports
-from cogs import whatdidimiss, stop, misc, images
+from cogs import admin, images, misc, stop, whatdidimiss
+
+bot.on_command_error = global_command_handler
 
 @bot.event
 async def on_ready():
@@ -19,12 +22,15 @@ async def on_ready():
 
 if __name__ == "__main__":
     # Add lines here to register additional "cogs", which are modular code sections that add commands
-    bot.add_cog(whatdidimiss.Whatdidimiss(bot))
+    bot.add_cog(whatdidimiss.Whatdidimiss())
     bot.add_cog(stop.Stop(bot))
     bot.add_cog(images.Cat())
     bot.add_cog(images.Dog())
     bot.add_cog(images.Gator())
     bot.add_cog(misc.Hug())
+    bot.add_cog(admin.Admin(bot))
+    bot.add_check(server_allowed_check)
+
     try:
         bot.run(CONFIG["key"])
     except discord.LoginFailure:
