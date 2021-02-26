@@ -114,9 +114,12 @@ class colormap_color_func(object):
     >>> WordCloud(color_func=colormap_color_func("magma"))
 
     """
-    def __init__(self, colormap):
+    def __init__(self, colormap, randomize_hue):
         import matplotlib.pyplot as plt
         self.colormap = plt.cm.get_cmap(colormap)
+        self.hue_offset = 0.0
+        if randomize_hue:
+            self.hue_offset = Random().uniform(0, 1)
 
     def __call__(self, word, font_size, position, orientation,
                  random_state=None, **kwargs):
@@ -124,6 +127,12 @@ class colormap_color_func(object):
             random_state = Random()
         r, g, b, _ = np.maximum(0, 255 * np.array(self.colormap(
             random_state.uniform(0, 1))))
+        
+        if self.hue_offset != 0.0:
+            h, s, v = colorsys.rgb_to_hsv(r, g, b) #offset the hue
+            h = (h + self.hue_offset) % 1.0
+            r, g, b = colorsys.hsv_to_rgb(h, s, v)
+
         return "rgb({:.0f}, {:.0f}, {:.0f})".format(r, g, b)
 
 
@@ -315,6 +324,9 @@ class WordCloud(object):
     outline_color : string, default="black"
         The text outline color
 
+    randomize_hue : bool, default=True
+        If colormap hue will be randomly rotated
+
     Attributes
     ----------
     ``words_`` : dict of string to float
@@ -348,7 +360,7 @@ class WordCloud(object):
                  include_numbers=False, min_word_length=0, collocation_threshold=30,
                  tint_emoji = True, rotate_emoji = True, emoji_cache_path = "./cache/",
                  emoji_regex = re.compile(r"<:[\w]+:(\d+)>"), font_size_mod = 1.0,
-                 outline_thickness = 0): #modified
+                 outline_thickness = 0, randomize_hue = True): #modified
         if font_path is None:
             font_path = FONT_PATH
         if color_func is None and colormap is None:
@@ -368,7 +380,7 @@ class WordCloud(object):
         self.contour_color = contour_color
         self.contour_width = contour_width
         self.scale = scale
-        self.color_func = color_func or colormap_color_func(colormap)
+        self.color_func = color_func or colormap_color_func(colormap, randomize_hue)
         self.max_words = max_words
         self.stopwords = stopwords if stopwords is not None else STOPWORDS
         self.min_font_size = min_font_size
@@ -784,11 +796,11 @@ class WordCloud(object):
     def get_outline(self, color): #modified
         #colors are strings, so this method is a bit pythonic
         c = [ int(a.strip())/255 for a in color[4:-1].split(',') ]
-        c = [ *colorsys.rgb_to_hsv(*c) ]
+        c = [ *colorsys.rgb_to_hsv(*c) ] #completely overkill for a simple value change (maybe change hue later?)
         c[2] -= np.sign(c[2] - self.outline_sensitivity) * self.outline_offset
         c = [ *colorsys.hsv_to_rgb(*c) ]
         c = [ int(min(255, max(0, a*255))) for a in c ]
-        return "rgb({}, {}, {})".format(*c)
+        return "RGB({}, {}, {})".format(*c)
     def to_image(self): 
         self._check_generated()
         if self.mask is not None:

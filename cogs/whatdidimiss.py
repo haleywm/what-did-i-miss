@@ -114,19 +114,23 @@ def create_wordcloud(words):
         Passes data, and config, to WordCloud.WordCloud().generate_from_frequencies()
         for generation.
     """
+
+    cfg = CONFIG["commands"]["whatdidimiss"]
+
     wc = wordcloud.WordCloud(
-        scale = CONFIG["commands"]["whatdidimiss"]["scale"],
-        width = CONFIG["commands"]["whatdidimiss"]["width"],
-        height = CONFIG["commands"]["whatdidimiss"]["height"],
-        background_color = CONFIG["commands"]["whatdidimiss"]["background-colour"],
+        scale = cfg["scale"],
+        width = cfg["width"],
+        height = cfg["height"],
+        background_color = cfg["background-colour"],
         mode = "RGBA",
-        outline_thickness = CONFIG["commands"]["whatdidimiss"]["outline-thickness"],
-        font_path = CONFIG["commands"]["whatdidimiss"]["fontpath"],
-        tint_emoji = CONFIG["commands"]["whatdidimiss"]["tint"],
-        emoji_cache_path = CONFIG["commands"]["whatdidimiss"]["cache"],
-        rotate_emoji = CONFIG["commands"]["whatdidimiss"]["rotate"],
-        font_size_mod = CONFIG["commands"]["whatdidimiss"]["limit"],
-        colormap=secrets.choice(CONFIG["commands"]["whatdidimiss"]["colormaps"])
+        outline_thickness = cfg["outline-thickness"],
+        font_path = cfg["fontpath"],
+        tint_emoji = cfg["tint"],
+        emoji_cache_path = cfg["cache"],
+        rotate_emoji = cfg["rotate"],
+        font_size_mod = cfg["limit"],
+        colormap = secrets.choice(cfg["colormaps"]),
+        randomize_hue = cfg["randomize-hue"]
     )
     file = BytesIO()
     if words:

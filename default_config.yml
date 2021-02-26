@@ -42,6 +42,8 @@ commands:
     background-colour: ~
     # Thickness in pixels
     outline-thickness: 4
+    # Rotate colormap hue randomly?
+    randomize-hue: True
   stop:
     enabled: True
   cat:
