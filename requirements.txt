@@ -6,6 +6,6 @@ SQLAlchemy==1.3.19
 discord==1.0.1
 fontTools==4.14.0
 Pillow==8.1.1
-PyYAML==5.3.1
+PyYAML==5.4
 secrets==1.0.2
 wordcloud==1.8.1
