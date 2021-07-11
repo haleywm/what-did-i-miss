@@ -105,7 +105,7 @@ async def collect_messages(
             ctx.guild.channels))]
     words = dict()
     msg_amount = 0
-    time_now = datetime.datetime.utcnow()
+    time_now = ctx.message.created_at
     # Default time_back of 0
     # This will be set to a larger value only if until_last_user_msg is True
     time_back = datetime.timedelta()
