@@ -66,7 +66,7 @@ Examples:
                 raise UserError(f'Thats too much time! {CONFIG["commands"]["whatdidimiss"]["maxtime"]} Maximum!', True)
             
             # Getting the earliest time that should be used
-            timestamp = datetime.datetime.utcnow() - datetime.timedelta(seconds=seconds)
+            timestamp = ctx.message.created_at - datetime.timedelta(seconds=seconds)
 
             # And now for the slow stuff
             with ctx.typing():
