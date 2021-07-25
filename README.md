@@ -21,6 +21,8 @@ The bot requires the current permissions, in order to run:
 | `.whatdidimiss` | `read_message_history` | `read_messages`, `send-messages`, `attach_files` |
 | `.stop`         | `none`                 | `none`                                           |
 
+This bot works with Docker. The docker-compose file will automatically create a `discordpythonconf` volume, place `config.yml` here.
+
 
 ## Features
 

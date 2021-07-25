@@ -34,7 +34,7 @@ try:
     __merge_dicts(CONFIG, load(open("config.yml"), Loader=Loader))
 except FileNotFoundError:
     print("Please create a config.yml file containing the discord bot private key.")
-    pass
+    sys.exit(1)
 except YAMLError:
     print("Please create a valid config.yml as per the example file, or the README")
     sys.exit(1)

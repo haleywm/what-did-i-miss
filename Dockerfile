@@ -9,10 +9,13 @@ RUN apt-get update && xargs -a dependencies.txt -r apt-get install -y
 
 # Install each required python package in requirements.txt
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install -U pip && pip install -U -r requirements.txt
 
 # Copy all local files needed for the program to run to the directory
-COPY cogs/ fonts/ services/ colormaps.txt default_config.yml main.py stopwords.txt .
+COPY cogs cogs/
+COPY fonts fonts/
+COPY services services/
+COPY colormaps.txt default_config.yml main.py stopwords.txt .
 
 # Create a symbolic link to where config should be mounted
 RUN ln -s -r config/config.yml config.yml
