@@ -1,0 +1,10 @@
+services:
+  discord:
+    build: .
+    volumes:
+      - type: volume
+        source: discordpythonconf
+        target: /app/config
+
+volumes:
+  discordpythonconf
