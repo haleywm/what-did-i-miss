@@ -105,7 +105,7 @@ async def collect_messages(
             ctx.guild.channels))]
     words = dict()
     msg_amount = 0
-    time_now = ctx.message.created_at
+    time_now = datetime.datetime.now(datetime.timezone.utc)
     # Default time_back of 0
     # This will be set to a larger value only if until_last_user_msg is True
     time_back = datetime.timedelta()
@@ -117,7 +117,7 @@ async def collect_messages(
                 # If only looking until the users last message, stop looking if they're the author
                 if(
                     until_last_user_msg and
-                    msg.author == ctx.message.author and
+                    msg.author == ctx.author and
                     msg.created_at < time_now - datetime.timedelta(
                         seconds = parse_time_to_seconds(CONFIG["commands"]["whatdidimiss"]["ignore-msg-time"])
                     )

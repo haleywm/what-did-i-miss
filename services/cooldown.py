@@ -6,7 +6,7 @@ import services.utils as utils
 
 def get_cooldown_id(ctx):
     "Converts a context into the cooldown ID that would be used in that particular context."
-    return str(ctx.message.author.id)
+    return str(ctx.author.id)
 
 
 def cooldown_in_effect(ctx):

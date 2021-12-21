@@ -1,7 +1,9 @@
 from services import utils, wordcloud, cooldown
 from services.utils import UserError
-import discord.ext.commands as commands
+from discord.commands import slash_command
+from discord.ext import commands
 import concurrent.futures, asyncio, datetime
+from datetime import timezone
 import discord
 from io import BytesIO
 import secrets
@@ -14,7 +16,7 @@ class Whatdidimiss(commands.Cog, name="Wordclouds"):
     Does not take input apart from what is defined by the spec for adding cogs.
     """
     
-    @commands.command(
+    @slash_command(
         name = "wordcloud",
         aliases = ["wc"],
         description = "Generates a word cloud of messages in the given time period.",
@@ -39,10 +41,9 @@ Examples:
     ):
         await self.find_wordcloud(ctx, in_time, one_channel, case_insensitive)
 
-    @commands.command(
+    @slash_command(
         name = "whatdidimiss",
-        aliases = ["wdim"],
-        description = "Generates a wordcloud of messages posted in the channelsince the last message from the user"
+        description = "Generates a wordcloud of messages posted in the channel since the last message from the user"
     )
     @commands.guild_only()
     async def whatdidimiss(self, ctx):
@@ -51,6 +52,7 @@ Examples:
         )
 
     async def find_wordcloud(self, ctx, in_time, one_channel=True, case_insensitive=True, stop_after_usermsg=False):
+        await ctx.defer()
         try:
             await self.check_cooldown(ctx)
             
@@ -66,7 +68,8 @@ Examples:
                 raise UserError(f'Thats too much time! {CONFIG["commands"]["whatdidimiss"]["maxtime"]} Maximum!', True)
             
             # Getting the earliest time that should be used
-            timestamp = ctx.message.created_at - datetime.timedelta(seconds=seconds)
+            #timestamp = ctx.message.created_at - datetime.timedelta(seconds=seconds)
+            timestamp = datetime.datetime.utcnow() - datetime.timedelta(seconds=seconds)
 
             # And now for the slow stuff
             with ctx.typing():
@@ -86,11 +89,11 @@ Examples:
                 with concurrent.futures.ProcessPoolExecutor() as pool:
                     image = await asyncio.get_event_loop().run_in_executor(pool, create_wordcloud, words)
                     if stop_after_usermsg:
-                        await ctx.send(f"Heres what happened since your last post {time_diff} ago ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
+                        await ctx.respond(f"Heres what happened since your last post {time_diff} ago ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
                     else:
-                        await ctx.send(f"Heres what happened in the past {utils.prettify_time(in_time)} ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
+                        await ctx.respond(f"Heres what happened in the past {utils.prettify_time(in_time)} ({msg_count} messages)", file=discord.File(fp=image, filename="wordcloud.png"))
         except UserError as e:
-            await ctx.send(f":warning:  {e.message}")
+            await ctx.respond(f":warning:  {e.message}")
             # Removing the cooldown as an act of mercy
             if e.no_cooldown:
                 cooldown.remove_cooldown(ctx)
