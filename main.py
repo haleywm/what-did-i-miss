@@ -36,6 +36,16 @@ async def on_ready():
     await database.setup_database()
     #await bot.change_presence(activity=discord.Activity(name=".help", type=discord.ActivityType.listening))
     await database.add_new_users(bot)
+    bot.background_task = asyncio.create_task(database.slow_refresh(bot))
+
+@bot.event
+async def on_guild_join(guild):
+    async with await database.get_database as connection:
+        await database.process_server(guild, connection)
+
+@bot.event
+async def on_guild_remove(guild):
+    await database.remove_server(guild)
 
 if __name__ == "__main__":
    main()
