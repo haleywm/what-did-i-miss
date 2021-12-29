@@ -3,7 +3,6 @@ from services.utils import UserError
 from discord.commands import slash_command
 from discord.ext import commands
 import concurrent.futures, asyncio, datetime
-from datetime import timezone
 import discord
 from io import BytesIO
 import secrets

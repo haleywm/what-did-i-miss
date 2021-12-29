@@ -57,3 +57,6 @@ commands:
     link: True
   hug:
     enabled: True
+newuserroles:
+  days: 3
+  role_id: 806808956004728843

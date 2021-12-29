@@ -7,4 +7,4 @@ __pycache__/
 key.txt
 /config.yml
 **/cache/**
-/server_variables.db
+db.sqlite
