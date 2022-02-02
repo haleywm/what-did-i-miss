@@ -1,9 +1,11 @@
 import sqlalchemy
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy import Column, Integer, DateTime, select, delete, and_
+from sqlalchemy import Column, Integer, BigInteger, DateTime, select, delete, update, and_, UniqueConstraint, func
+from operator import itemgetter
 import datetime
 import asyncio
 from services.config import CONFIG
+from typing import Optional
 
 now = datetime.datetime.now
 
@@ -20,9 +22,18 @@ Setup = asyncio.Event()
 
 class Membership(Base):
     __tablename__ = "membership"
-    server_id = Column("server_id", Integer, primary_key=True)
-    user_id = Column("user_id", Integer, primary_key=True)
+    server_id = Column("server_id", BigInteger, primary_key=True)
+    user_id = Column("user_id", BigInteger, primary_key=True)
     first_seen = Column("first_seen", DateTime, nullable=False)
+
+class ServerRoles(Base):
+    __tablename__ = "serverroles"
+    __table_args__ = (
+        UniqueConstraint("position")
+    )
+    server_id = Column("server_id", BigInteger, primary_key=True)
+    role_id = Column("role_id", BigInteger, primary_key=True)
+    position = Column("position", Integer, nullable=False)
 
 async def setup_database():
     # Disable echo for production
@@ -82,9 +93,9 @@ async def slow_refresh(bot):
                     Membership.first_seen > newest,
                     Membership.first_seen < oldest
                 ))
-                results = await session.execute(lookup)
+                results = await session.stream(lookup)
 
-                for user in results:
+                async for user in results:
                     guild = bot.get_guild(user.server_id)
                     role = guild.get_role(CONFIG["newuserroles"]["role_id"])
                     if role:
@@ -113,4 +124,61 @@ async def remove_server(guild):
     async with await get_database() as session:
         async with session.begin():
             to_del = delete(Membership).where(Membership.server_id == guild.id)
-            session.execute(to_del)
+            await session.execute(to_del)
+
+async def get_all_server_roles():
+    # Return a map that maps server ID's to lists of sorted role id's for each server
+    button_roles: dict[int, list[tuple[int, int]]] = dict()
+    async with await get_database() as session:
+        async with session.begin():
+            lookup = select(ServerRoles)
+            result = await session.stream(lookup)
+            async for entry in result:
+                server = entry.server_id
+                role = entry.role_id
+                pos = entry.position
+                if server not in button_roles:
+                    button_roles[server] = list()
+                button_roles[server].append((role, pos))
+    
+    # Then sorting the data
+    # Iterating through each list, and sorting its contents by the second value in each tuple
+    for role_list in button_roles.values():
+        role_list.sort(key=itemgetter(1))
+
+    return button_roles
+
+async def add_button(role_id: int, server_id: int, position: Optional[int] = None):
+    async with await get_database() as session:
+        async with session.begin():
+            # If position isn't given, lookup the next highest position to use
+            if position is None:
+                # Lookup the highest position for this server and add 1
+                lookup = select(func.max(ServerRoles.position).label("max_pos")).where(ServerRoles.server_id == server_id)
+                result = (await session.execute(lookup)).first()
+                # The max will be none/null if there aren't any roles for that server yet, so just use 0 in that case
+                if result.max_pos is None:
+                    position = 0
+                else:
+                    position = result.max_pos + 1
+            new_role = ServerRoles(server_id = server_id, role_id = role_id, position = position)
+            await session.add(new_role)
+
+async def remove_button(role_id: int, server_id: int, position: Optional[int] = None):
+    async with await get_database() as session:
+        async with session.begin():
+            # Lookup position if not known
+            if position is None:
+                lookup = select(ServerRoles.position).where(and_(ServerRoles.server_id == server_id, ServerRoles.role_id == role_id))
+                result = (await session.execute(lookup)).first()
+                if result is None:
+                    # Button already gone
+                    return
+                position = result.position
+            to_delete = delete(ServerRoles).where(and_(ServerRoles.server_id == server_id, ServerRoles.role_id == role_id))
+            await session.execute(to_delete)
+            to_update = update(ServerRoles).\
+                where(and_(ServerRoles.server_id == server_id, ServerRoles.position > position)).\
+                values(position=(ServerRoles.position - 1))
+            await session.execute(to_update)
+
